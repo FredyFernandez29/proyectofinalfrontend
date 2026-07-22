@@ -68,7 +68,7 @@ const Navbar = () => {
       <span><strong>Ticket System</strong> - Rol: {user?.rol || 'invitado'}</span>
       <Link to="/tickets">Tickets</Link>
       {user?.rol === 'admin' && <Link to="/usuarios">Usuarios</Link>}
-      <button onClick={handleLogout}>Cerrar Sesión</button>
+      <button onClick={handleLogout} style={{ marginLeft: 'auto' }}>Cerrar Sesión</button>
     </nav>
   );
 };
@@ -321,9 +321,9 @@ const TicketForm = () => {
 };
 
 // ============================================================
-// 6. NUEVO COMPONENTE: ADMINISTRACIÓN DE USUARIOS
+// 6. NUEVO COMPONENTE: GESTIÓN DE USUARIOS (SOLO ADMIN)
 // ============================================================
-const UserList = () => {
+const UserManagement = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [nuevoUsuario, setNuevoUsuario] = useState({
     nombre: '',
@@ -334,33 +334,37 @@ const UserList = () => {
     edad: '',
     rol: 'cliente'
   });
-  const { user } = useAuth();
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
 
-  // Cargar usuarios al montar
+  // Cargar lista de usuarios al montar
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
-        setUsuarios(res.data);
-      } catch (error) {
-        console.error('Error al cargar usuarios:', error);
-      }
-    };
-    fetchUsuarios();
+    cargarUsuarios();
   }, []);
 
-  const handleInputChange = (e) => {
+  const cargarUsuarios = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
+      setUsuarios(res.data);
+    } catch (err) {
+      console.error('Error al cargar usuarios:', err);
+      setError('No se pudieron cargar los usuarios');
+    }
+  };
+
+  const handleChange = (e) => {
     setNuevoUsuario({ ...nuevoUsuario, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMensaje('');
+    setError('');
     try {
+      // El backend espera los campos: nombre, apellido, correo, clave, telefono, edad, rol
       await axios.post(`${process.env.REACT_APP_API_URL}/usuarios`, nuevoUsuario);
-      // Recargar lista de usuarios
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
-      setUsuarios(res.data);
-      // Resetear formulario
+      setMensaje('Usuario creado exitosamente');
+      // Limpiar formulario
       setNuevoUsuario({
         nombre: '',
         apellido: '',
@@ -370,107 +374,92 @@ const UserList = () => {
         edad: '',
         rol: 'cliente'
       });
-      alert('Usuario creado exitosamente');
-    } catch (error) {
-      alert(error.response?.data?.message || 'Error al crear usuario');
+      // Recargar lista
+      cargarUsuarios();
+    } catch (err) {
+      console.error('Error al crear usuario:', err);
+      setError(err.response?.data?.message || 'Error al crear usuario');
     }
   };
 
-  // Solo admin puede ver esto
-  if (user?.rol !== 'admin') {
-    return <Navigate to="/tickets" />;
-  }
-
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Administración de Usuarios</h2>
+      <h2>Gestión de Usuarios (Admin)</h2>
       
-      {/* Formulario para crear usuario */}
-      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', maxWidth: '500px' }}>
+      <div style={{ marginBottom: '30px', border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
         <h3>Crear Nuevo Usuario</h3>
         <form onSubmit={handleSubmit}>
-          <div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <input
               type="text"
               name="nombre"
               placeholder="Nombre"
               value={nuevoUsuario.nombre}
-              onChange={handleInputChange}
+              onChange={handleChange}
               required
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <input
               type="text"
               name="apellido"
               placeholder="Apellido"
               value={nuevoUsuario.apellido}
-              onChange={handleInputChange}
+              onChange={handleChange}
               required
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <input
               type="email"
               name="correo"
-              placeholder="Correo"
+              placeholder="Correo electrónico"
               value={nuevoUsuario.correo}
-              onChange={handleInputChange}
+              onChange={handleChange}
               required
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <input
               type="password"
               name="clave"
               placeholder="Contraseña"
               value={nuevoUsuario.clave}
-              onChange={handleInputChange}
+              onChange={handleChange}
               required
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <input
               type="text"
               name="telefono"
               placeholder="Teléfono (opcional)"
               value={nuevoUsuario.telefono}
-              onChange={handleInputChange}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              onChange={handleChange}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <input
               type="number"
               name="edad"
               placeholder="Edad (opcional)"
               value={nuevoUsuario.edad}
-              onChange={handleInputChange}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              onChange={handleChange}
+              style={{ padding: '8px' }}
             />
-          </div>
-          <div>
             <select
               name="rol"
               value={nuevoUsuario.rol}
-              onChange={handleInputChange}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+              onChange={handleChange}
+              style={{ padding: '8px' }}
             >
               <option value="cliente">Cliente</option>
               <option value="tecnico">Técnico</option>
               <option value="admin">Administrador</option>
             </select>
           </div>
-          <button type="submit" style={{ padding: '8px 20px' }}>Crear Usuario</button>
+          <button type="submit" style={{ marginTop: '10px', padding: '8px 20px' }}>Crear Usuario</button>
         </form>
+        {mensaje && <p style={{ color: 'green', marginTop: '10px' }}>{mensaje}</p>}
+        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
       </div>
 
-      {/* Lista de usuarios */}
-      <h3>Usuarios Registrados</h3>
+      <h3>Lista de Usuarios</h3>
       <table border="1" cellPadding="5" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
@@ -517,6 +506,15 @@ function App() {
     return children;
   };
 
+  // Ruta solo para admin
+  const AdminRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    if (loading) return <div>Cargando...</div>;
+    if (!user) return <Navigate to="/login" />;
+    if (user.rol !== 'admin') return <Navigate to="/tickets" />;
+    return children;
+  };
+
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -550,9 +548,9 @@ function App() {
           <Route
             path="/usuarios"
             element={
-              <ProtectedRoute>
-                <UserList />
-              </ProtectedRoute>
+              <AdminRoute>
+                <UserManagement />
+              </AdminRoute>
             }
           />
           <Route path="/" element={<Navigate to="/tickets" />} />
