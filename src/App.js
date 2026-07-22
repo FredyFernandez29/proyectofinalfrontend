@@ -64,7 +64,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{ display: 'flex', gap: '20px', padding: '10px', background: '#f0f0f0' }}>
+    <nav style={{ display: 'flex', gap: '20px', padding: '10px', background: '#f0f0f0', alignItems: 'center' }}>
       <span><strong>Ticket System</strong> - Rol: {user?.rol || 'invitado'}</span>
       <Link to="/tickets">Tickets</Link>
       {user?.rol === 'admin' && <Link to="/usuarios">Usuarios</Link>}
@@ -238,7 +238,7 @@ const TicketForm = () => {
         })
         .catch(err => console.error('Error al cargar ticket:', err));
     }
-  }, [id, user, isEdit]); // Dependencias corregidas
+  }, [id, user, isEdit]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -321,7 +321,192 @@ const TicketForm = () => {
 };
 
 // ============================================================
-// 6. COMPONENTE PRINCIPAL APP (CON RUTAS)
+// 6. NUEVO COMPONENTE: ADMINISTRACIÓN DE USUARIOS
+// ============================================================
+const UserList = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [nuevoUsuario, setNuevoUsuario] = useState({
+    nombre: '',
+    apellido: '',
+    correo: '',
+    clave: '',
+    telefono: '',
+    edad: '',
+    rol: 'cliente'
+  });
+  const { user } = useAuth();
+
+  // Cargar usuarios al montar
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
+        setUsuarios(res.data);
+      } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+      }
+    };
+    fetchUsuarios();
+  }, []);
+
+  const handleInputChange = (e) => {
+    setNuevoUsuario({ ...nuevoUsuario, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/usuarios`, nuevoUsuario);
+      // Recargar lista de usuarios
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
+      setUsuarios(res.data);
+      // Resetear formulario
+      setNuevoUsuario({
+        nombre: '',
+        apellido: '',
+        correo: '',
+        clave: '',
+        telefono: '',
+        edad: '',
+        rol: 'cliente'
+      });
+      alert('Usuario creado exitosamente');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error al crear usuario');
+    }
+  };
+
+  // Solo admin puede ver esto
+  if (user?.rol !== 'admin') {
+    return <Navigate to="/tickets" />;
+  }
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2>Administración de Usuarios</h2>
+      
+      {/* Formulario para crear usuario */}
+      <div style={{ border: '1px solid #ccc', padding: '20px', marginBottom: '20px', maxWidth: '500px' }}>
+        <h3>Crear Nuevo Usuario</h3>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre"
+              value={nuevoUsuario.nombre}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              name="apellido"
+              placeholder="Apellido"
+              value={nuevoUsuario.apellido}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="email"
+              name="correo"
+              placeholder="Correo"
+              value={nuevoUsuario.correo}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              name="clave"
+              placeholder="Contraseña"
+              value={nuevoUsuario.clave}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              name="telefono"
+              placeholder="Teléfono (opcional)"
+              value={nuevoUsuario.telefono}
+              onChange={handleInputChange}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              name="edad"
+              placeholder="Edad (opcional)"
+              value={nuevoUsuario.edad}
+              onChange={handleInputChange}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            />
+          </div>
+          <div>
+            <select
+              name="rol"
+              value={nuevoUsuario.rol}
+              onChange={handleInputChange}
+              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
+            >
+              <option value="cliente">Cliente</option>
+              <option value="tecnico">Técnico</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <button type="submit" style={{ padding: '8px 20px' }}>Crear Usuario</button>
+        </form>
+      </div>
+
+      {/* Lista de usuarios */}
+      <h3>Usuarios Registrados</h3>
+      <table border="1" cellPadding="5" style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Edad</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {usuarios.length === 0 ? (
+            <tr><td colSpan="7">No hay usuarios registrados.</td></tr>
+          ) : (
+            usuarios.map(u => (
+              <tr key={u.id}>
+                <td>{u.id}</td>
+                <td>{u.nombre}</td>
+                <td>{u.apellido}</td>
+                <td>{u.correo}</td>
+                <td>{u.telefono || '-'}</td>
+                <td>{u.edad || '-'}</td>
+                <td>{u.rol}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// ============================================================
+// 7. COMPONENTE PRINCIPAL APP (CON RUTAS)
 // ============================================================
 function App() {
   // Componente para rutas protegidas
@@ -359,6 +544,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TicketForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/usuarios"
+            element={
+              <ProtectedRoute>
+                <UserList />
               </ProtectedRoute>
             }
           />
