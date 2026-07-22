@@ -238,7 +238,7 @@ const TicketForm = () => {
         })
         .catch(err => console.error('Error al cargar ticket:', err));
     }
-  }, [id, user]);
+  }, [id, user, isEdit]); // Dependencias corregidas
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
