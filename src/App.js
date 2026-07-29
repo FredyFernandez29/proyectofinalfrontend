@@ -52,7 +52,7 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================
-// 2. ESTILOS GLOBALES (objeto)
+// 2. ESTILOS GLOBALES
 // ============================
 const styles = {
   container: {
@@ -219,16 +219,18 @@ const TicketsList = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
+        console.log('Fetching tickets from:', process.env.REACT_APP_API_URL);
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
+        console.log('Tickets data:', res.data);
         setTickets(res.data);
       } catch (error) {
-        console.error('Error al cargar tickets:', error);
+        console.error('Error al cargar tickets:', error.response || error);
       } finally {
         setLoading(false);
       }
     };
     fetchTickets();
-  }, []); // No dependencies needed
+  }, []);
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este ticket?')) {
@@ -309,7 +311,7 @@ const TicketsList = () => {
   );
 };
 
-// --- TicketForm (Crear/Editar) ---
+// --- TicketForm ---
 const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -336,7 +338,6 @@ const TicketForm = () => {
         }
       }
     };
-    fetchUsuarios();
 
     const fetchTicket = async () => {
       if (isEdit) {
@@ -351,11 +352,14 @@ const TicketForm = () => {
           });
         } catch (err) {
           console.error('Error al cargar ticket:', err);
+          alert('No se pudo cargar el ticket');
         }
       }
     };
+
+    fetchUsuarios();
     fetchTicket();
-  }, [id, user, isEdit]); // Added isEdit
+  }, [id, user, isEdit]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -443,7 +447,7 @@ const TicketForm = () => {
   );
 };
 
-// --- TicketDetail (ver ticket + comentarios) ---
+// --- TicketDetail ---
 const TicketDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -453,27 +457,29 @@ const TicketDetail = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const cargarTicket = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-      setTicket(res.data);
-      setComentarios(res.data.comentarios || []);
-    } catch (error) {
-      if (error.response?.status === 403 || error.response?.status === 404) {
-        alert(error.response.data.message);
-        navigate('/tickets');
-      } else {
-        console.error(error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const cargarTicket = async () => {
+      try {
+        console.log('Cargando ticket ID:', id);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
+        console.log('Ticket data:', res.data);
+        setTicket(res.data);
+        setComentarios(res.data.comentarios || []);
+      } catch (error) {
+        console.error('Error al cargar ticket:', error.response || error);
+        if (error.response?.status === 403 || error.response?.status === 404) {
+          alert(error.response.data.message || 'Ticket no encontrado');
+          navigate('/tickets');
+        } else {
+          alert('Error al cargar el ticket');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     cargarTicket();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]); // include id, cargarTicket is defined inside but stable
+  }, [id, navigate]);
 
   const agregarComentario = async (e) => {
     e.preventDefault();
@@ -522,7 +528,6 @@ const TicketDetail = () => {
         </Link>
       </div>
 
-      {/* Comentarios */}
       <div style={styles.card}>
         <h3>Comentarios</h3>
         {comentarios.length === 0 ? (
@@ -556,7 +561,7 @@ const TicketDetail = () => {
   );
 };
 
-// --- Administración de Usuarios (solo admin) ---
+// --- UsuariosList (solo admin) ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
