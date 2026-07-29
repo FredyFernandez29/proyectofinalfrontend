@@ -129,9 +129,6 @@ const styles = {
     textDecoration: 'none',
     color: '#007bff',
   },
-  linkHover: {
-    textDecoration: 'underline',
-  },
   badge: {
     padding: '4px 8px',
     borderRadius: '12px',
@@ -220,19 +217,18 @@ const TicketsList = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
+        setTickets(res.data);
+      } catch (error) {
+        console.error('Error al cargar tickets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchTickets();
-  }, []);
-
-  const fetchTickets = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
-      setTickets(res.data);
-    } catch (error) {
-      console.error('Error al cargar tickets:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []); // No dependencies needed
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este ticket?')) {
@@ -330,14 +326,22 @@ const TicketForm = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.rol === 'admin' || user?.rol === 'tecnico') {
-      axios.get(`${process.env.REACT_APP_API_URL}/usuarios`)
-        .then(res => setUsuarios(res.data))
-        .catch(console.error);
-    }
-    if (isEdit) {
-      axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`)
-        .then(res => {
+    const fetchUsuarios = async () => {
+      if (user?.rol === 'admin' || user?.rol === 'tecnico') {
+        try {
+          const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
+          setUsuarios(res.data);
+        } catch (err) {
+          console.error('Error al cargar usuarios:', err);
+        }
+      }
+    };
+    fetchUsuarios();
+
+    const fetchTicket = async () => {
+      if (isEdit) {
+        try {
+          const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
           const t = res.data;
           setFormData({
             titulo: t.titulo,
@@ -345,10 +349,13 @@ const TicketForm = () => {
             prioridad: t.prioridad,
             asignado_a: t.asignado_a?.id || ''
           });
-        })
-        .catch(console.error);
-    }
-  }, [id, user]);
+        } catch (err) {
+          console.error('Error al cargar ticket:', err);
+        }
+      }
+    };
+    fetchTicket();
+  }, [id, user, isEdit]); // Added isEdit
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -446,10 +453,6 @@ const TicketDetail = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    cargarTicket();
-  }, [id]);
-
   const cargarTicket = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
@@ -467,6 +470,11 @@ const TicketDetail = () => {
     }
   };
 
+  useEffect(() => {
+    cargarTicket();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // include id, cargarTicket is defined inside but stable
+
   const agregarComentario = async (e) => {
     e.preventDefault();
     if (!nuevoComentario.trim()) return;
@@ -475,7 +483,6 @@ const TicketDetail = () => {
         contenido: nuevoComentario
       });
       const nuevo = res.data[0];
-      // Agregar el comentario con el usuario (asumimos que el backend devuelve el usuario)
       setComentarios([...comentarios, { ...nuevo, usuario: user }]);
       setNuevoComentario('');
     } catch (error) {
@@ -515,7 +522,7 @@ const TicketDetail = () => {
         </Link>
       </div>
 
-      {/* Sección de comentarios */}
+      {/* Comentarios */}
       <div style={styles.card}>
         <h3>Comentarios</h3>
         {comentarios.length === 0 ? (
