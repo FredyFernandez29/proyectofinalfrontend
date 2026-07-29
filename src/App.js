@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import './App.css'; // Importamos los estilos
 
 // ============================================================
 // 1. CONTEXTO DE AUTENTICACIÓN
@@ -52,7 +53,7 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================================================
-// 2. COMPONENTE: NAVBAR
+// 2. COMPONENTE NAVBAR
 // ============================================================
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -64,17 +65,18 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{ display: 'flex', gap: '20px', padding: '10px', background: '#f0f0f0', alignItems: 'center' }}>
-      <span><strong>Ticket System</strong> - Rol: {user?.rol || 'invitado'}</span>
+    <nav className="navbar">
+      <span className="navbar-brand">🎫 Ticket System</span>
+      <span className="navbar-rol">Rol: {user?.rol || 'invitado'}</span>
       <Link to="/tickets">Tickets</Link>
       {user?.rol === 'admin' && <Link to="/usuarios">Usuarios</Link>}
-      <button onClick={handleLogout} style={{ marginLeft: 'auto' }}>Cerrar Sesión</button>
+      <button className="btn-logout" onClick={handleLogout}>Cerrar sesión</button>
     </nav>
   );
 };
 
 // ============================================================
-// 3. COMPONENTE: LOGIN
+// 3. COMPONENTE LOGIN
 // ============================================================
 const Login = () => {
   const [correo, setCorreo] = useState('');
@@ -94,41 +96,46 @@ const Login = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto' }}>
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          />
-        </div>
-        <button type="submit" style={{ padding: '8px 20px' }}>Ingresar</button>
-        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-      </form>
+    <div className="app-container" style={{ maxWidth: '450px', marginTop: '80px' }}>
+      <div className="card">
+        <h2>Iniciar Sesión</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Correo electrónico</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="tu@email.com"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Contraseña</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="btn" style={{ width: '100%' }}>Ingresar</button>
+          {error && <div className="error-msg">{error}</div>}
+        </form>
+      </div>
     </div>
   );
 };
 
 // ============================================================
-// 4. COMPONENTE: LISTA DE TICKETS
+// 4. COMPONENTE LISTA DE TICKETS
 // ============================================================
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -138,6 +145,8 @@ const TicketsList = () => {
         setTickets(res.data);
       } catch (error) {
         console.error('Error al cargar tickets:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchTickets();
@@ -154,51 +163,82 @@ const TicketsList = () => {
     }
   };
 
+  const getEstadoBadge = (estado) => {
+    const map = {
+      'abierto': 'badge-abierto',
+      'en progreso': 'badge-en progreso',
+      'cerrado': 'badge-cerrado'
+    };
+    return `badge ${map[estado] || ''}`;
+  };
+
+  const getPrioridadBadge = (prioridad) => {
+    const map = {
+      'baja': 'badge-baja',
+      'media': 'badge-media',
+      'alta': 'badge-alta'
+    };
+    return `badge ${map[prioridad] || ''}`;
+  };
+
+  if (loading) return <div className="loading">Cargando tickets...</div>;
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Mis Tickets</h2>
-      <Link to="/tickets/nuevo">
-        <button style={{ marginBottom: '15px' }}>Crear Nuevo Ticket</button>
-      </Link>
-      <table border="1" cellPadding="5" style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Título</th>
-            <th>Estado</th>
-            <th>Prioridad</th>
-            <th>Asignado a</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tickets.length === 0 ? (
-            <tr><td colSpan="6">No hay tickets.</td></tr>
-          ) : (
-            tickets.map(t => (
-              <tr key={t.id}>
-                <td>{t.id}</td>
-                <td>{t.titulo}</td>
-                <td>{t.estado}</td>
-                <td>{t.prioridad}</td>
-                <td>{t.asignado_a?.nombre || 'Sin asignar'}</td>
-                <td>
-                  <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '10px' }}>Editar</Link>
-                  {user?.rol === 'admin' && (
-                    <button onClick={() => handleDelete(t.id)}>Eliminar</button>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className="app-container">
+      <div className="card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0 }}>Mis Tickets</h2>
+          <Link to="/tickets/nuevo">
+            <button className="btn">➕ Nuevo Ticket</button>
+          </Link>
+        </div>
+
+        {tickets.length === 0 ? (
+          <div className="empty">No hay tickets disponibles.</div>
+        ) : (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Estado</th>
+                  <th>Prioridad</th>
+                  <th>Asignado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tickets.map(t => (
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
+                    <td>{t.titulo}</td>
+                    <td><span className={getEstadoBadge(t.estado)}>{t.estado}</span></td>
+                    <td><span className={getPrioridadBadge(t.prioridad)}>{t.prioridad}</span></td>
+                    <td>{t.asignado_a?.nombre || 'Sin asignar'}</td>
+                    <td>
+                      <div className="actions">
+                        <Link to={`/tickets/editar/${t.id}`}>
+                          <button className="btn btn-secondary btn-sm">Editar</button>
+                        </Link>
+                        {user?.rol === 'admin' && (
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(t.id)}>Eliminar</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 // ============================================================
-// 5. COMPONENTE: FORMULARIO DE TICKET (CREAR/EDITAR)
+// 5. COMPONENTE FORMULARIO DE TICKET
 // ============================================================
 const TicketForm = () => {
   const { id } = useParams();
@@ -213,16 +253,15 @@ const TicketForm = () => {
     asignado_a: ''
   });
   const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Cargar lista de usuarios (para asignar)
     if (user?.rol === 'admin' || user?.rol === 'tecnico') {
       axios.get(`${process.env.REACT_APP_API_URL}/usuarios`)
         .then(res => setUsuarios(res.data))
         .catch(err => console.error('Error al cargar usuarios:', err));
     }
 
-    // Si estamos editando, cargar datos del ticket
     if (isEdit) {
       axios.get(`${process.env.REACT_APP_API_URL}/tickets`)
         .then(res => {
@@ -246,6 +285,7 @@ const TicketForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (isEdit) {
         await axios.put(`${process.env.REACT_APP_API_URL}/tickets/${id}`, formData);
@@ -255,263 +295,92 @@ const TicketForm = () => {
       navigate('/tickets');
     } catch (error) {
       alert(error.response?.data?.message || 'Error al guardar el ticket');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px' }}>
-      <h2>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Título:</label>
-          <input
-            type="text"
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          />
-        </div>
-        <div>
-          <label>Descripción:</label>
-          <textarea
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-            rows="4"
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          />
-        </div>
-        <div>
-          <label>Prioridad:</label>
-          <select
-            name="prioridad"
-            value={formData.prioridad}
-            onChange={handleChange}
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          >
-            <option value="baja">Baja</option>
-            <option value="media">Media</option>
-            <option value="alta">Alta</option>
-          </select>
-        </div>
-        {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
-          <div>
-            <label>Asignar a:</label>
-            <select
-              name="asignado_a"
-              value={formData.asignado_a}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-            >
-              <option value="">Sin asignar</option>
-              {usuarios
-                .filter(u => u.rol === 'tecnico' || u.rol === 'admin')
-                .map(u => (
-                  <option key={u.id} value={u.id}>{u.nombre} {u.apellido}</option>
-                ))}
-            </select>
-          </div>
-        )}
-        <button type="submit" style={{ padding: '8px 20px' }}>Guardar</button>
-      </form>
-    </div>
-  );
-};
-
-// ============================================================
-// 6. NUEVO COMPONENTE: GESTIÓN DE USUARIOS (SOLO ADMIN)
-// ============================================================
-const UserManagement = () => {
-  const [usuarios, setUsuarios] = useState([]);
-  const [nuevoUsuario, setNuevoUsuario] = useState({
-    nombre: '',
-    apellido: '',
-    correo: '',
-    clave: '',
-    telefono: '',
-    edad: '',
-    rol: 'cliente'
-  });
-  const [mensaje, setMensaje] = useState('');
-  const [error, setError] = useState('');
-
-  // Cargar lista de usuarios al montar
-  useEffect(() => {
-    cargarUsuarios();
-  }, []);
-
-  const cargarUsuarios = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
-      setUsuarios(res.data);
-    } catch (err) {
-      console.error('Error al cargar usuarios:', err);
-      setError('No se pudieron cargar los usuarios');
-    }
-  };
-
-  const handleChange = (e) => {
-    setNuevoUsuario({ ...nuevoUsuario, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMensaje('');
-    setError('');
-    try {
-      // El backend espera los campos: nombre, apellido, correo, clave, telefono, edad, rol
-      await axios.post(`${process.env.REACT_APP_API_URL}/usuarios`, nuevoUsuario);
-      setMensaje('Usuario creado exitosamente');
-      // Limpiar formulario
-      setNuevoUsuario({
-        nombre: '',
-        apellido: '',
-        correo: '',
-        clave: '',
-        telefono: '',
-        edad: '',
-        rol: 'cliente'
-      });
-      // Recargar lista
-      cargarUsuarios();
-    } catch (err) {
-      console.error('Error al crear usuario:', err);
-      setError(err.response?.data?.message || 'Error al crear usuario');
-    }
-  };
-
-  return (
-    <div style={{ padding: '20px' }}>
-      <h2>Gestión de Usuarios (Admin)</h2>
-      
-      <div style={{ marginBottom: '30px', border: '1px solid #ccc', padding: '15px', borderRadius: '5px' }}>
-        <h3>Crear Nuevo Usuario</h3>
+    <div className="app-container" style={{ maxWidth: '700px' }}>
+      <div className="card">
+        <h2>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div className="form-group">
+            <label>Título</label>
             <input
               type="text"
-              name="nombre"
-              placeholder="Nombre"
-              value={nuevoUsuario.nombre}
+              name="titulo"
+              className="form-control"
+              placeholder="Título del ticket"
+              value={formData.titulo}
               onChange={handleChange}
               required
-              style={{ padding: '8px' }}
             />
-            <input
-              type="text"
-              name="apellido"
-              placeholder="Apellido"
-              value={nuevoUsuario.apellido}
+          </div>
+          <div className="form-group">
+            <label>Descripción</label>
+            <textarea
+              name="descripcion"
+              className="form-control"
+              placeholder="Describe el problema"
+              value={formData.descripcion}
               onChange={handleChange}
-              required
-              style={{ padding: '8px' }}
+              rows="4"
             />
-            <input
-              type="email"
-              name="correo"
-              placeholder="Correo electrónico"
-              value={nuevoUsuario.correo}
-              onChange={handleChange}
-              required
-              style={{ padding: '8px' }}
-            />
-            <input
-              type="password"
-              name="clave"
-              placeholder="Contraseña"
-              value={nuevoUsuario.clave}
-              onChange={handleChange}
-              required
-              style={{ padding: '8px' }}
-            />
-            <input
-              type="text"
-              name="telefono"
-              placeholder="Teléfono (opcional)"
-              value={nuevoUsuario.telefono}
-              onChange={handleChange}
-              style={{ padding: '8px' }}
-            />
-            <input
-              type="number"
-              name="edad"
-              placeholder="Edad (opcional)"
-              value={nuevoUsuario.edad}
-              onChange={handleChange}
-              style={{ padding: '8px' }}
-            />
+          </div>
+          <div className="form-group">
+            <label>Prioridad</label>
             <select
-              name="rol"
-              value={nuevoUsuario.rol}
+              name="prioridad"
+              className="form-control"
+              value={formData.prioridad}
               onChange={handleChange}
-              style={{ padding: '8px' }}
             >
-              <option value="cliente">Cliente</option>
-              <option value="tecnico">Técnico</option>
-              <option value="admin">Administrador</option>
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
             </select>
           </div>
-          <button type="submit" style={{ marginTop: '10px', padding: '8px 20px' }}>Crear Usuario</button>
-        </form>
-        {mensaje && <p style={{ color: 'green', marginTop: '10px' }}>{mensaje}</p>}
-        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-      </div>
-
-      <h3>Lista de Usuarios</h3>
-      <table border="1" cellPadding="5" style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Correo</th>
-            <th>Teléfono</th>
-            <th>Edad</th>
-            <th>Rol</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.length === 0 ? (
-            <tr><td colSpan="7">No hay usuarios registrados.</td></tr>
-          ) : (
-            usuarios.map(u => (
-              <tr key={u.id}>
-                <td>{u.id}</td>
-                <td>{u.nombre}</td>
-                <td>{u.apellido}</td>
-                <td>{u.correo}</td>
-                <td>{u.telefono || '-'}</td>
-                <td>{u.edad || '-'}</td>
-                <td>{u.rol}</td>
-              </tr>
-            ))
+          {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
+            <div className="form-group">
+              <label>Asignar a</label>
+              <select
+                name="asignado_a"
+                className="form-control"
+                value={formData.asignado_a}
+                onChange={handleChange}
+              >
+                <option value="">Sin asignar</option>
+                {usuarios
+                  .filter(u => u.rol === 'tecnico' || u.rol === 'admin')
+                  .map(u => (
+                    <option key={u.id} value={u.id}>{u.nombre} {u.apellido}</option>
+                  ))}
+              </select>
+            </div>
           )}
-        </tbody>
-      </table>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button type="submit" className="btn" disabled={loading}>
+              {loading ? 'Guardando...' : 'Guardar'}
+            </button>
+            <Link to="/tickets">
+              <button type="button" className="btn btn-secondary">Cancelar</button>
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
 // ============================================================
-// 7. COMPONENTE PRINCIPAL APP (CON RUTAS)
+// 6. COMPONENTE PRINCIPAL APP
 // ============================================================
 function App() {
-  // Componente para rutas protegidas
   const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
-    if (loading) return <div>Cargando...</div>;
+    if (loading) return <div className="loading">Cargando...</div>;
     if (!user) return <Navigate to="/login" />;
-    return children;
-  };
-
-  // Ruta solo para admin
-  const AdminRoute = ({ children }) => {
-    const { user, loading } = useAuth();
-    if (loading) return <div>Cargando...</div>;
-    if (!user) return <Navigate to="/login" />;
-    if (user.rol !== 'admin') return <Navigate to="/tickets" />;
     return children;
   };
 
@@ -521,38 +390,9 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/tickets"
-            element={
-              <ProtectedRoute>
-                <TicketsList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tickets/nuevo"
-            element={
-              <ProtectedRoute>
-                <TicketForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tickets/editar/:id"
-            element={
-              <ProtectedRoute>
-                <TicketForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/usuarios"
-            element={
-              <AdminRoute>
-                <UserManagement />
-              </AdminRoute>
-            }
-          />
+          <Route path="/tickets" element={<ProtectedRoute><TicketsList /></ProtectedRoute>} />
+          <Route path="/tickets/nuevo" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
+          <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
           <Route path="/" element={<Navigate to="/tickets" />} />
         </Routes>
       </BrowserRouter>
