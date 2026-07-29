@@ -219,12 +219,11 @@ const TicketsList = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        console.log('Fetching tickets from:', process.env.REACT_APP_API_URL);
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
-        console.log('Tickets data:', res.data);
         setTickets(res.data);
       } catch (error) {
-        console.error('Error al cargar tickets:', error.response || error);
+        console.error('Error al cargar tickets:', error);
+        alert('No se pudieron cargar los tickets');
       } finally {
         setLoading(false);
       }
@@ -353,13 +352,14 @@ const TicketForm = () => {
         } catch (err) {
           console.error('Error al cargar ticket:', err);
           alert('No se pudo cargar el ticket');
+          navigate('/tickets');
         }
       }
     };
 
     fetchUsuarios();
     fetchTicket();
-  }, [id, user, isEdit]);
+  }, [id, user, isEdit, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -460,24 +460,22 @@ const TicketDetail = () => {
   useEffect(() => {
     const cargarTicket = async () => {
       try {
-        console.log('Cargando ticket ID:', id);
+        setLoading(true);
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-        console.log('Ticket data:', res.data);
         setTicket(res.data);
         setComentarios(res.data.comentarios || []);
       } catch (error) {
-        console.error('Error al cargar ticket:', error.response || error);
-        if (error.response?.status === 403 || error.response?.status === 404) {
-          alert(error.response.data.message || 'Ticket no encontrado');
-          navigate('/tickets');
+        console.error('Error al cargar ticket:', error);
+        if (error.response) {
+          alert(error.response.data?.message || 'Error al cargar el ticket');
         } else {
-          alert('Error al cargar el ticket');
+          alert('Error de conexión al servidor');
         }
+        navigate('/tickets');
       } finally {
         setLoading(false);
       }
     };
-
     cargarTicket();
   }, [id, navigate]);
 
