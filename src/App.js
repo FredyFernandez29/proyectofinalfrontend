@@ -505,6 +505,7 @@ const TicketsList = () => {
 };
 
 // --- TicketForm ---
+// --- TicketForm (actualizado con campo de estado) ---
 const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -516,6 +517,7 @@ const TicketForm = () => {
     titulo: '',
     descripcion: '',
     prioridad: 'media',
+    estado: 'abierto',  // <--- NUEVO CAMPO
     asignado_a: ''
   });
   const [usuarios, setUsuarios] = useState([]);
@@ -536,6 +538,7 @@ const TicketForm = () => {
             titulo: t.titulo,
             descripcion: t.descripcion || '',
             prioridad: t.prioridad,
+            estado: t.estado || 'abierto',  // <--- CARGAR ESTADO
             asignado_a: t.asignado_a?.id || ''
           });
         }
@@ -581,14 +584,29 @@ const TicketForm = () => {
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Título</label>
           <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} required style={styles.input} />
+
           <label style={styles.label}>Descripción</label>
           <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows="4" style={{ ...styles.input, resize: 'vertical' }} />
+
           <label style={styles.label}>Prioridad</label>
           <select name="prioridad" value={formData.prioridad} onChange={handleChange} style={styles.input}>
             <option value="baja">Baja</option>
             <option value="media">Media</option>
             <option value="alta">Alta</option>
           </select>
+
+          {/* CAMPO DE ESTADO - solo visible en edición */}
+          {isEdit && (
+            <>
+              <label style={styles.label}>Estado</label>
+              <select name="estado" value={formData.estado} onChange={handleChange} style={styles.input}>
+                <option value="abierto">Abierto</option>
+                <option value="en progreso">En progreso</option>
+                <option value="cerrado">Cerrado</option>
+              </select>
+            </>
+          )}
+
           {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
             <>
               <label style={styles.label}>Asignar a</label>
@@ -600,7 +618,10 @@ const TicketForm = () => {
               </select>
             </>
           )}
-          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
+
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Guardando...' : 'Guardar'}
+          </button>
           <Link to="/tickets" style={{ marginLeft: '12px', color: '#64748b' }}>Cancelar</Link>
         </form>
       </div>
