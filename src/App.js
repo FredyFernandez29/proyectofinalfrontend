@@ -52,7 +52,7 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================
-// 2. SISTEMA DE NOTIFICACIONES (Toast)
+// 2. SISTEMA DE NOTIFICACIONES
 // ============================
 const ToastContext = createContext();
 
@@ -98,14 +98,14 @@ const toastStyles = {
     borderRadius: '8px',
     color: '#fff',
     fontWeight: '500',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
     animation: 'slideIn 0.3s ease-out',
     minWidth: '250px',
     maxWidth: '400px',
   },
-  success: { backgroundColor: '#28a745' },
-  error: { backgroundColor: '#dc3545' },
-  info: { backgroundColor: '#17a2b8' },
+  success: { backgroundColor: '#10b981' },
+  error: { backgroundColor: '#ef4444' },
+  info: { backgroundColor: '#3b82f6' },
 };
 
 const globalStyles = `
@@ -114,67 +114,72 @@ const globalStyles = `
     to { transform: translateX(0); opacity: 1; }
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
   }
   .fade-in {
     animation: fadeIn 0.3s ease-out;
   }
   body {
-    background: #f0f4f8;
+    background: #f1f5f9;
     margin: 0;
     padding: 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   }
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES
+// 3. ESTILOS GLOBALES (Tema mejorado)
 // ============================
 const styles = {
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1280px',
     margin: '0 auto',
     padding: '20px',
-    fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
   },
   card: {
     background: '#ffffff',
-    borderRadius: '12px',
-    boxShadow: '0 4px 20px rgba(0, 50, 100, 0.12)',
+    borderRadius: '16px',
+    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02)',
     padding: '24px',
     marginBottom: '24px',
     transition: 'box-shadow 0.25s ease, transform 0.2s ease',
-    border: '1px solid rgba(0, 80, 150, 0.08)',
+    border: '1px solid rgba(0, 0, 0, 0.02)',
   },
   button: {
-    backgroundColor: '#0066cc',
+    backgroundColor: '#2563eb',
     color: '#ffffff',
     border: 'none',
     padding: '10px 20px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '600',
-    transition: 'background 0.2s, transform 0.15s, box-shadow 0.2s',
-    boxShadow: '0 2px 6px rgba(0, 80, 160, 0.25)',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+  },
+  buttonHover: {
+    backgroundColor: '#1d4ed8',
+    transform: 'scale(1.02)',
+    boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
   },
   buttonDanger: {
-    backgroundColor: '#dc3545',
+    backgroundColor: '#ef4444',
     color: '#fff',
     border: 'none',
     padding: '8px 16px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '600',
-    transition: 'background 0.2s, box-shadow 0.2s',
-    boxShadow: '0 2px 6px rgba(220, 53, 69, 0.25)',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
   },
   input: {
     width: '100%',
-    padding: '12px',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
+    padding: '12px 14px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
     fontSize: '14px',
     marginBottom: '12px',
     boxSizing: 'border-box',
@@ -190,50 +195,94 @@ const styles = {
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    marginTop: '10px',
+    marginTop: '8px',
   },
   th: {
-    background: '#e8f0fe',
-    padding: '12px',
+    background: '#f8fafc',
+    padding: '12px 16px',
     textAlign: 'left',
-    borderBottom: '2px solid #b8d0e8',
-    color: '#0b2b44',
+    borderBottom: '2px solid #e2e8f0',
+    color: '#1e293b',
     fontWeight: '600',
+    fontSize: '13px',
+    letterSpacing: '0.02em',
   },
   td: {
-    padding: '12px',
-    borderBottom: '1px solid #e2e8f0',
+    padding: '12px 16px',
+    borderBottom: '1px solid #f1f5f9',
+    fontSize: '14px',
   },
   nav: {
     display: 'flex',
     gap: '24px',
     alignItems: 'center',
-    padding: '12px 24px',
-    background: '#0b2b44',
-    borderRadius: '10px',
+    padding: '14px 32px',
+    background: 'linear-gradient(135deg, #0b2b44 0%, #1a4b6d 100%)',
+    borderRadius: '16px',
     marginBottom: '24px',
-    boxShadow: '0 4px 16px rgba(0, 20, 40, 0.25)',
+    boxShadow: '0 8px 32px rgba(11, 43, 68, 0.25)',
     color: '#ffffff',
   },
   link: {
     textDecoration: 'none',
-    color: '#8bb9fe',
+    color: '#93c5fd',
     fontWeight: '500',
     transition: 'color 0.2s',
+    padding: '4px 0',
+    borderBottom: '2px solid transparent',
+  },
+  linkActive: {
+    color: '#ffffff',
+    borderBottom: '2px solid #60a5fa',
   },
   badge: {
-    padding: '4px 12px',
-    borderRadius: '20px',
+    padding: '4px 14px',
+    borderRadius: '30px',
     fontSize: '12px',
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#fff',
     display: 'inline-block',
+    letterSpacing: '0.01em',
   },
   loading: {
     textAlign: 'center',
-    padding: '60px',
+    padding: '80px',
     fontSize: '18px',
     color: '#4a6a85',
+  },
+  // Dashboard cards
+  statGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '16px',
+    marginBottom: '24px',
+  },
+  statCard: {
+    background: '#ffffff',
+    borderRadius: '12px',
+    padding: '20px 24px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+    border: '1px solid #f1f5f9',
+    transition: 'all 0.2s',
+  },
+  statNumber: {
+    fontSize: '32px',
+    fontWeight: '700',
+    color: '#0b2b44',
+    lineHeight: '1.2',
+  },
+  statLabel: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#64748b',
+    marginTop: '4px',
+  },
+  priorityDot: {
+    display: 'inline-block',
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    marginRight: '6px',
   },
 };
 
@@ -241,10 +290,11 @@ const styles = {
 // 4. COMPONENTES
 // ============================
 
-// --- Navbar ---
+// --- Navbar con degradado y sin emojis ---
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useNavigate(); // no se usa, pero lo dejamos por si
 
   const handleLogout = () => {
     logout();
@@ -253,11 +303,11 @@ const Navbar = () => {
 
   return (
     <div style={styles.nav}>
-      <span style={{ fontWeight: '700', fontSize: '18px' }}>Ticket System</span>
-      <span style={{ marginLeft: 'auto' }}>Rol: <strong style={{ color: '#8bb9fe' }}>{user?.rol || 'invitado'}</strong></span>
-      <Link to="/tickets" style={styles.link}>Mis Tickets</Link>
+      <span style={{ fontWeight: '700', fontSize: '20px', letterSpacing: '-0.01em' }}>Ticket System</span>
+      <span style={{ marginLeft: 'auto', color: '#94a3b8' }}>Rol: <strong style={{ color: '#93c5fd' }}>{user?.rol || 'invitado'}</strong></span>
+      <Link to="/tickets" style={styles.link}>Dashboard</Link>
       {user?.rol === 'admin' && <Link to="/usuarios" style={styles.link}>Usuarios</Link>}
-      <button onClick={handleLogout} style={{ ...styles.button, backgroundColor: '#dc3545' }}>Cerrar Sesión</button>
+      <button onClick={handleLogout} style={{ ...styles.button, backgroundColor: '#ef4444', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}>Cerrar Sesión</button>
     </div>
   );
 };
@@ -287,9 +337,10 @@ const Login = () => {
   };
 
   return (
-    <div style={{ ...styles.container, maxWidth: '400px', marginTop: '80px' }}>
+    <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
       <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>Iniciar Sesión</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>Iniciar Sesión</h2>
+        <p style={{ color: '#64748b', marginBottom: '24px' }}>Ingresa tus credenciales para continuar</p>
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -310,14 +361,14 @@ const Login = () => {
           <button type="submit" style={styles.button} disabled={loading}>
             {loading ? 'Cargando...' : 'Ingresar'}
           </button>
-          {error && <p style={{ color: '#dc3545', marginTop: '12px' }}>{error}</p>}
+          {error && <p style={{ color: '#ef4444', marginTop: '16px' }}>{error}</p>}
         </form>
       </div>
     </div>
   );
 };
 
-// --- TicketsList ---
+// --- TicketsList con Dashboard ---
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -351,28 +402,72 @@ const TicketsList = () => {
     }
   };
 
+  // ===== DASHBOARD: Estadísticas =====
+  const total = tickets.length;
+  const abiertos = tickets.filter(t => t.estado === 'abierto').length;
+  const enProgreso = tickets.filter(t => t.estado === 'en progreso').length;
+  const cerrados = tickets.filter(t => t.estado === 'cerrado').length;
+  const alta = tickets.filter(t => t.prioridad === 'alta').length;
+  const media = tickets.filter(t => t.prioridad === 'media').length;
+  const baja = tickets.filter(t => t.prioridad === 'baja').length;
+
   const getEstadoColor = (estado) => {
-    const colores = {
-      'abierto': '#28a745',
-      'en progreso': '#ffc107',
-      'cerrado': '#6c757d'
-    };
-    return colores[estado] || '#6c757d';
+    const colores = { 'abierto': '#10b981', 'en progreso': '#f59e0b', 'cerrado': '#94a3b8' };
+    return colores[estado] || '#94a3b8';
+  };
+
+  const getPrioridadColor = (prioridad) => {
+    const colores = { 'alta': '#ef4444', 'media': '#f59e0b', 'baja': '#10b981' };
+    return colores[prioridad] || '#94a3b8';
   };
 
   if (loading) return <div style={styles.loading}>Cargando tickets...</div>;
 
   return (
     <div style={styles.container}>
+      {/* Dashboard de Estadísticas */}
+      <div style={styles.statGrid}>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber}>{total}</div>
+          <div style={styles.statLabel}>Total Tickets</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#10b981' }}>{abiertos}</div>
+          <div style={styles.statLabel}>Abiertos</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#f59e0b' }}>{enProgreso}</div>
+          <div style={styles.statLabel}>En Progreso</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#94a3b8' }}>{cerrados}</div>
+          <div style={styles.statLabel}>Cerrados</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#ef4444' }}>{alta}</div>
+          <div style={styles.statLabel}>Prioridad Alta</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#f59e0b' }}>{media}</div>
+          <div style={styles.statLabel}>Prioridad Media</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={styles.statNumber} style={{ color: '#10b981' }}>{baja}</div>
+          <div style={styles.statLabel}>Prioridad Baja</div>
+        </div>
+      </div>
+
+      {/* Lista de Tickets */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#0b2b44' }}>Mis Tickets</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '22px', fontWeight: '700' }}>Mis Tickets</h2>
         <Link to="/tickets/nuevo">
           <button style={styles.button}>+ Crear Nuevo Ticket</button>
         </Link>
       </div>
+
       <div style={styles.card} className="fade-in">
         {tickets.length === 0 ? (
-          <p style={{ color: '#4a6a85' }}>No tienes tickets. ¡Crea uno nuevo!</p>
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>No tienes tickets. ¡Crea uno nuevo!</p>
         ) : (
           <table style={styles.table}>
             <thead>
@@ -387,19 +482,28 @@ const TicketsList = () => {
             </thead>
             <tbody>
               {tickets.map(t => (
-                <tr key={t.id} className="fade-in">
+                <tr key={t.id} className="fade-in" style={{ transition: 'background 0.15s' }}>
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ color: '#0066cc', fontWeight: '500' }}>{t.titulo}</Link>
+                    <Link to={`/tickets/${t.id}`} style={{ color: '#2563eb', fontWeight: '500', textDecoration: 'none' }}>
+                      {t.titulo}
+                    </Link>
                   </td>
                   <td style={styles.td}>
-                    <span style={{ ...styles.badge, backgroundColor: getEstadoColor(t.estado) }}>{t.estado}</span>
+                    <span style={{ ...styles.badge, backgroundColor: getEstadoColor(t.estado) }}>
+                      {t.estado}
+                    </span>
                   </td>
-                  <td style={styles.td}>{t.prioridad}</td>
+                  <td style={styles.td}>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={{ ...styles.priorityDot, backgroundColor: getPrioridadColor(t.prioridad) }}></span>
+                      {t.prioridad}
+                    </span>
+                  </td>
                   <td style={styles.td}>{t.asignado_a?.nombre || 'Sin asignar'}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#0066cc' }}>Ver</Link>
-                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '12px', color: '#28a745' }}>Editar</Link>
+                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#2563eb', fontWeight: '500' }}>Ver</Link>
+                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '12px', color: '#10b981', fontWeight: '500' }}>Editar</Link>
                     {user?.rol === 'admin' && (
                       <button onClick={() => handleDelete(t.id)} style={styles.buttonDanger}>Eliminar</button>
                     )}
@@ -487,7 +591,7 @@ const TicketForm = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '24px', fontWeight: '700' }}>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Título</label>
           <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} required style={styles.input} />
@@ -511,7 +615,7 @@ const TicketForm = () => {
             </>
           )}
           <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
-          <Link to="/tickets" style={{ marginLeft: '12px', color: '#6c757d' }}>Cancelar</Link>
+          <Link to="/tickets" style={{ marginLeft: '12px', color: '#64748b' }}>Cancelar</Link>
         </form>
       </div>
     </div>
@@ -569,17 +673,22 @@ const TicketDetail = () => {
   if (!ticket) return <div style={styles.container}>Ticket no encontrado</div>;
 
   const getEstadoColor = (estado) => {
-    const colores = { 'abierto': '#28a745', 'en progreso': '#ffc107', 'cerrado': '#6c757d' };
-    return colores[estado] || '#6c757d';
+    const colores = { 'abierto': '#10b981', 'en progreso': '#f59e0b', 'cerrado': '#94a3b8' };
+    return colores[estado] || '#94a3b8';
+  };
+
+  const getPrioridadColor = (prioridad) => {
+    const colores = { 'alta': '#ef4444', 'media': '#f59e0b', 'baja': '#10b981' };
+    return colores[prioridad] || '#94a3b8';
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>{ticket.titulo}</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '24px', fontWeight: '700' }}>{ticket.titulo}</h2>
         <p><strong>Descripción:</strong> {ticket.descripcion || 'Sin descripción'}</p>
         <p><strong>Estado:</strong> <span style={{ ...styles.badge, backgroundColor: getEstadoColor(ticket.estado) }}>{ticket.estado}</span></p>
-        <p><strong>Prioridad:</strong> {ticket.prioridad}</p>
+        <p><strong>Prioridad:</strong> <span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ ...styles.priorityDot, backgroundColor: getPrioridadColor(ticket.prioridad) }}></span> {ticket.prioridad}</span></p>
         <p><strong>Creado por:</strong> {ticket.creado_por?.nombre} {ticket.creado_por?.apellido}</p>
         <p><strong>Asignado a:</strong> {ticket.asignado_a?.nombre || 'Sin asignar'}</p>
         <p><strong>Fecha creación:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
@@ -588,19 +697,19 @@ const TicketDetail = () => {
           <button style={styles.button}>Editar</button>
         </Link>
         <Link to="/tickets">
-          <button style={{ ...styles.button, backgroundColor: '#6c757d' }}>Volver</button>
+          <button style={{ ...styles.button, backgroundColor: '#94a3b8', boxShadow: 'none' }}>Volver</button>
         </Link>
       </div>
       <div style={styles.card} className="fade-in">
-        <h3 style={{ color: '#0b2b44' }}>Comentarios</h3>
+        <h3 style={{ color: '#0b2b44', fontSize: '18px', fontWeight: '600' }}>Comentarios</h3>
         {comentarios.length === 0 ? (
-          <p style={{ color: '#4a6a85' }}>No hay comentarios aún.</p>
+          <p style={{ color: '#64748b' }}>No hay comentarios aún.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {comentarios.map(c => (
-              <li key={c.id} style={{ borderBottom: '1px solid #e2e8f0', padding: '12px 0' }} className="fade-in">
+              <li key={c.id} style={{ borderBottom: '1px solid #f1f5f9', padding: '12px 0' }} className="fade-in">
                 <strong style={{ color: '#0b2b44' }}>{c.usuarios?.nombre} {c.usuarios?.apellido}</strong>
-                <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '12px' }}>
+                <span style={{ color: '#94a3b8', fontSize: '0.8rem', marginLeft: '12px' }}>
                   {new Date(c.created_at).toLocaleString()}
                 </span>
                 <p style={{ margin: '6px 0 0', color: '#1e293b' }}>{c.contenido}</p>
@@ -621,7 +730,7 @@ const TicketDetail = () => {
 // 5. COMPONENTES DE USUARIOS
 // ============================
 
-// --- UserForm (Crear/Editar usuario) ---
+// --- UserForm ---
 const UserForm = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -657,7 +766,7 @@ const UserForm = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>Crear Nuevo Usuario</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '24px', fontWeight: '700' }}>Crear Nuevo Usuario</h2>
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Nombre</label>
           <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required style={styles.input} />
@@ -678,14 +787,14 @@ const UserForm = () => {
             <option value="admin">Administrador</option>
           </select>
           <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Creando...' : 'Crear Usuario'}</button>
-          <Link to="/usuarios" style={{ marginLeft: '12px', color: '#6c757d' }}>Cancelar</Link>
+          <Link to="/usuarios" style={{ marginLeft: '12px', color: '#64748b' }}>Cancelar</Link>
         </form>
       </div>
     </div>
   );
 };
 
-// --- UsuariosList (con botón Crear) ---
+// --- UsuariosList ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -703,7 +812,7 @@ const UsuariosList = () => {
   return (
     <div style={styles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ color: '#0b2b44' }}>Administración de Usuarios</h2>
+        <h2 style={{ color: '#0b2b44', fontSize: '22px', fontWeight: '700' }}>Administración de Usuarios</h2>
         <Link to="/usuarios/nuevo">
           <button style={styles.button}>+ Crear Usuario</button>
         </Link>
