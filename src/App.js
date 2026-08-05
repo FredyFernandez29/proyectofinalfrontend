@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -52,7 +52,7 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================
-// 2. SISTEMA DE NOTIFICACIONES
+// 2. SISTEMA DE NOTIFICACIONES (Toast + Real-time Polling)
 // ============================
 const ToastContext = createContext();
 
@@ -129,7 +129,7 @@ const globalStyles = `
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES
+// 3. ESTILOS GLOBALES (extendidos)
 // ============================
 const styles = {
   container: {
@@ -283,13 +283,31 @@ const styles = {
     borderRadius: '50%',
     marginRight: '6px',
   },
+  tag: {
+    display: 'inline-block',
+    padding: '2px 10px',
+    borderRadius: '16px',
+    fontSize: '12px',
+    fontWeight: '500',
+    marginRight: '6px',
+    marginBottom: '4px',
+    backgroundColor: '#e0e7ff',
+    color: '#1e3a8a',
+  },
+  attachment: {
+    maxWidth: '200px',
+    maxHeight: '150px',
+    borderRadius: '8px',
+    marginTop: '6px',
+    border: '1px solid #e2e8f0',
+  },
 };
 
 // ============================
 // 4. COMPONENTES
 // ============================
 
-// --- Navbar (corregido: eliminada variable no usada) ---
+// --- Navbar ---
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -310,7 +328,7 @@ const Navbar = () => {
   );
 };
 
-// --- Login ---
+// --- Login (sin cambios) ---
 const Login = () => {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
@@ -366,26 +384,44 @@ const Login = () => {
   );
 };
 
-// --- TicketsList con Dashboard (corregido: props duplicadas) ---
+// ============================
+// 5. TicketsList con Dashboard, Etiquetas y Polling
+// ============================
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { showToast } = useToast();
+  const [lastChecked, setLastChecked] = useState(Date.now());
+  const intervalRef = useRef(null);
 
   const fetchTickets = useCallback(async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
-      setTickets(res.data);
+      const newTickets = res.data;
+      // Detectar nuevos tickets asignados al usuario (para notificación)
+      if (user && user.id) {
+        const prevIds = new Set(tickets.map(t => t.id));
+        const newItems = newTickets.filter(t => !prevIds.has(t.id) && t.asignado_a?.id === user.id);
+        if (newItems.length > 0) {
+          showToast(`Tienes ${newItems.length} nuevo(s) ticket(s) asignado(s)`, 'info');
+        }
+      }
+      setTickets(newTickets);
     } catch (error) {
-      showToast('No se pudieron cargar los tickets', 'error');
+      console.error('Error al cargar tickets:', error);
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [tickets, user, showToast]);
 
   useEffect(() => {
     fetchTickets();
+    // Polling cada 10 segundos
+    intervalRef.current = setInterval(() => {
+      fetchTickets();
+    }, 10000);
+    return () => clearInterval(intervalRef.current);
   }, [fetchTickets]);
 
   const handleDelete = async (id) => {
@@ -400,13 +436,12 @@ const TicketsList = () => {
     }
   };
 
+  // Estadísticas
   const total = tickets.length;
   const abiertos = tickets.filter(t => t.estado === 'abierto').length;
   const enProgreso = tickets.filter(t => t.estado === 'en progreso').length;
   const cerrados = tickets.filter(t => t.estado === 'cerrado').length;
   const alta = tickets.filter(t => t.prioridad === 'alta').length;
-  const media = tickets.filter(t => t.prioridad === 'media').length;
-  const baja = tickets.filter(t => t.prioridad === 'baja').length;
 
   const getEstadoColor = (estado) => {
     const colores = { 'abierto': '#10b981', 'en progreso': '#f59e0b', 'cerrado': '#94a3b8' };
@@ -416,6 +451,15 @@ const TicketsList = () => {
   const getPrioridadColor = (prioridad) => {
     const colores = { 'alta': '#ef4444', 'media': '#f59e0b', 'baja': '#10b981' };
     return colores[prioridad] || '#94a3b8';
+  };
+
+  // Renderizar etiquetas como badges
+  const renderTags = (etiquetas) => {
+    if (!etiquetas) return null;
+    const tags = etiquetas.split(',').map(t => t.trim()).filter(t => t);
+    return tags.map((tag, idx) => (
+      <span key={idx} style={styles.tag}>{tag}</span>
+    ));
   };
 
   if (loading) return <div style={styles.loading}>Cargando tickets...</div>;
@@ -443,14 +487,6 @@ const TicketsList = () => {
           <div style={{ ...styles.statNumber, color: '#ef4444' }}>{alta}</div>
           <div style={styles.statLabel}>Prioridad Alta</div>
         </div>
-        <div style={styles.statCard} className="fade-in">
-          <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{media}</div>
-          <div style={styles.statLabel}>Prioridad Media</div>
-        </div>
-        <div style={styles.statCard} className="fade-in">
-          <div style={{ ...styles.statNumber, color: '#10b981' }}>{baja}</div>
-          <div style={styles.statLabel}>Prioridad Baja</div>
-        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -471,6 +507,7 @@ const TicketsList = () => {
                 <th style={styles.th}>Título</th>
                 <th style={styles.th}>Estado</th>
                 <th style={styles.th}>Prioridad</th>
+                <th style={styles.th}>Etiquetas</th>
                 <th style={styles.th}>Asignado a</th>
                 <th style={styles.th}>Acciones</th>
               </tr>
@@ -495,6 +532,9 @@ const TicketsList = () => {
                       {t.prioridad}
                     </span>
                   </td>
+                  <td style={styles.td}>
+                    {renderTags(t.etiquetas)}
+                  </td>
                   <td style={styles.td}>{t.asignado_a?.nombre || 'Sin asignar'}</td>
                   <td style={styles.td}>
                     <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#2563eb', fontWeight: '500' }}>Ver</Link>
@@ -513,7 +553,9 @@ const TicketsList = () => {
   );
 };
 
-// --- TicketForm ---
+// ============================
+// 6. TicketForm con Etiquetas
+// ============================
 const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -525,7 +567,8 @@ const TicketForm = () => {
     titulo: '',
     descripcion: '',
     prioridad: 'media',
-    asignado_a: ''
+    asignado_a: '',
+    etiquetas: ''
   });
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -545,7 +588,8 @@ const TicketForm = () => {
             titulo: t.titulo,
             descripcion: t.descripcion || '',
             prioridad: t.prioridad,
-            asignado_a: t.asignado_a?.id || ''
+            asignado_a: t.asignado_a?.id || '',
+            etiquetas: t.etiquetas || ''
           });
         }
       } catch (error) {
@@ -598,6 +642,8 @@ const TicketForm = () => {
             <option value="media">Media</option>
             <option value="alta">Alta</option>
           </select>
+          <label style={styles.label}>Etiquetas (separadas por coma)</label>
+          <input type="text" name="etiquetas" value={formData.etiquetas} onChange={handleChange} placeholder="Ej: frontend, urgente, bug" style={styles.input} />
           {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
             <>
               <label style={styles.label}>Asignar a</label>
@@ -617,7 +663,9 @@ const TicketForm = () => {
   );
 };
 
-// --- TicketDetail ---
+// ============================
+// 7. TicketDetail con Comentarios + Adjuntos
+// ============================
 const TicketDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -625,6 +673,7 @@ const TicketDetail = () => {
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState('');
+  const [nuevoAdjunto, setNuevoAdjunto] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -647,20 +696,40 @@ const TicketDetail = () => {
 
   const agregarComentario = async (e) => {
     e.preventDefault();
-    if (!nuevoComentario.trim()) {
-      showToast('El comentario no puede estar vacío', 'error');
+    if (!nuevoComentario.trim() && !nuevoAdjunto) {
+      showToast('Escribe un comentario o adjunta un archivo', 'error');
       return;
     }
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/tickets/${id}/comentarios`, {
-        contenido: nuevoComentario
-      });
+      // Procesar adjunto a base64 si existe
+      let adjuntoBase64 = null;
+      if (nuevoAdjunto) {
+        const reader = new FileReader();
+        const fileData = await new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(nuevoAdjunto);
+        });
+        adjuntoBase64 = fileData;
+      }
+      const payload = {
+        contenido: nuevoComentario,
+        adjunto: adjuntoBase64
+      };
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/tickets/${id}/comentarios`, payload);
       const nuevo = res.data[0];
       setComentarios([...comentarios, { ...nuevo, usuarios: user }]);
       setNuevoComentario('');
+      setNuevoAdjunto(null);
       showToast('Comentario agregado', 'success');
     } catch (error) {
       showToast('Error al agregar comentario', 'error');
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNuevoAdjunto(file);
     }
   };
 
@@ -677,6 +746,14 @@ const TicketDetail = () => {
     return colores[prioridad] || '#94a3b8';
   };
 
+  const renderTags = (etiquetas) => {
+    if (!etiquetas) return null;
+    const tags = etiquetas.split(',').map(t => t.trim()).filter(t => t);
+    return tags.map((tag, idx) => (
+      <span key={idx} style={styles.tag}>{tag}</span>
+    ));
+  };
+
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
@@ -684,6 +761,7 @@ const TicketDetail = () => {
         <p><strong>Descripción:</strong> {ticket.descripcion || 'Sin descripción'}</p>
         <p><strong>Estado:</strong> <span style={{ ...styles.badge, backgroundColor: getEstadoColor(ticket.estado) }}>{ticket.estado}</span></p>
         <p><strong>Prioridad:</strong> <span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ ...styles.priorityDot, backgroundColor: getPrioridadColor(ticket.prioridad) }}></span> {ticket.prioridad}</span></p>
+        <p><strong>Etiquetas:</strong> {renderTags(ticket.etiquetas) || 'Ninguna'}</p>
         <p><strong>Creado por:</strong> {ticket.creado_por?.nombre} {ticket.creado_por?.apellido}</p>
         <p><strong>Asignado a:</strong> {ticket.asignado_a?.nombre || 'Sin asignar'}</p>
         <p><strong>Fecha creación:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
@@ -695,6 +773,7 @@ const TicketDetail = () => {
           <button style={{ ...styles.button, backgroundColor: '#94a3b8', boxShadow: 'none' }}>Volver</button>
         </Link>
       </div>
+
       <div style={styles.card} className="fade-in">
         <h3 style={{ color: '#0b2b44', fontSize: '18px', fontWeight: '600' }}>Comentarios</h3>
         {comentarios.length === 0 ? (
@@ -708,12 +787,27 @@ const TicketDetail = () => {
                   {new Date(c.created_at).toLocaleString()}
                 </span>
                 <p style={{ margin: '6px 0 0', color: '#1e293b' }}>{c.contenido}</p>
+                {c.adjunto && (
+                  <div>
+                    {c.adjunto.startsWith('data:image') ? (
+                      <img src={c.adjunto} alt="adjunto" style={styles.attachment} />
+                    ) : (
+                      <a href={c.adjunto} target="_blank" rel="noopener noreferrer">Ver adjunto</a>
+                    )}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
+
         <form onSubmit={agregarComentario} style={{ marginTop: '16px' }}>
           <textarea placeholder="Escribe un comentario..." value={nuevoComentario} onChange={(e) => setNuevoComentario(e.target.value)} rows="3" style={styles.input} />
+          <div style={{ marginBottom: '12px' }}>
+            <label style={styles.label}>Adjuntar archivo (imagen o documento)</label>
+            <input type="file" onChange={handleFileChange} style={styles.input} accept="image/*,.pdf,.doc,.docx" />
+            {nuevoAdjunto && <span style={{ color: '#64748b', fontSize: '14px' }}>{nuevoAdjunto.name}</span>}
+          </div>
           <button type="submit" style={styles.button}>Agregar comentario</button>
         </form>
       </div>
@@ -722,10 +816,8 @@ const TicketDetail = () => {
 };
 
 // ============================
-// 5. COMPONENTES DE USUARIOS
+// 8. COMPONENTES DE USUARIOS (sin cambios)
 // ============================
-
-// --- UserForm ---
 const UserForm = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -789,7 +881,6 @@ const UserForm = () => {
   );
 };
 
-// --- UsuariosList ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -841,7 +932,7 @@ const UsuariosList = () => {
 };
 
 // ============================
-// 6. APP PRINCIPAL
+// 9. APP PRINCIPAL
 // ============================
 function App() {
   const ProtectedRoute = ({ children }) => {
