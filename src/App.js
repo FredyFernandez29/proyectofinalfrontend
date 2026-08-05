@@ -129,7 +129,7 @@ const globalStyles = `
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES (Tema mejorado)
+// 3. ESTILOS GLOBALES
 // ============================
 const styles = {
   container: {
@@ -250,7 +250,6 @@ const styles = {
     fontSize: '18px',
     color: '#4a6a85',
   },
-  // Dashboard cards
   statGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -290,11 +289,10 @@ const styles = {
 // 4. COMPONENTES
 // ============================
 
-// --- Navbar con degradado y sin emojis ---
+// --- Navbar (corregido: eliminada variable no usada) ---
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useNavigate(); // no se usa, pero lo dejamos por si
 
   const handleLogout = () => {
     logout();
@@ -368,7 +366,7 @@ const Login = () => {
   );
 };
 
-// --- TicketsList con Dashboard ---
+// --- TicketsList con Dashboard (corregido: props duplicadas) ---
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -402,7 +400,6 @@ const TicketsList = () => {
     }
   };
 
-  // ===== DASHBOARD: Estadísticas =====
   const total = tickets.length;
   const abiertos = tickets.filter(t => t.estado === 'abierto').length;
   const enProgreso = tickets.filter(t => t.estado === 'en progreso').length;
@@ -425,39 +422,37 @@ const TicketsList = () => {
 
   return (
     <div style={styles.container}>
-      {/* Dashboard de Estadísticas */}
       <div style={styles.statGrid}>
         <div style={styles.statCard} className="fade-in">
           <div style={styles.statNumber}>{total}</div>
           <div style={styles.statLabel}>Total Tickets</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#10b981' }}>{abiertos}</div>
+          <div style={{ ...styles.statNumber, color: '#10b981' }}>{abiertos}</div>
           <div style={styles.statLabel}>Abiertos</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#f59e0b' }}>{enProgreso}</div>
+          <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{enProgreso}</div>
           <div style={styles.statLabel}>En Progreso</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#94a3b8' }}>{cerrados}</div>
+          <div style={{ ...styles.statNumber, color: '#94a3b8' }}>{cerrados}</div>
           <div style={styles.statLabel}>Cerrados</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#ef4444' }}>{alta}</div>
+          <div style={{ ...styles.statNumber, color: '#ef4444' }}>{alta}</div>
           <div style={styles.statLabel}>Prioridad Alta</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#f59e0b' }}>{media}</div>
+          <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{media}</div>
           <div style={styles.statLabel}>Prioridad Media</div>
         </div>
         <div style={styles.statCard} className="fade-in">
-          <div style={styles.statNumber} style={{ color: '#10b981' }}>{baja}</div>
+          <div style={{ ...styles.statNumber, color: '#10b981' }}>{baja}</div>
           <div style={styles.statLabel}>Prioridad Baja</div>
         </div>
       </div>
 
-      {/* Lista de Tickets */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#0b2b44', fontSize: '22px', fontWeight: '700' }}>Mis Tickets</h2>
         <Link to="/tickets/nuevo">
