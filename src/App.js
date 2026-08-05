@@ -424,7 +424,7 @@ const ForgotPassword = () => {
   );
 };
 
-// --- ResetPassword (CORREGIDO: navigate se usa) ---
+// --- ResetPassword (CORREGIDO: navigate se usa solo en handleSubmit) ---
 const ResetPassword = () => {
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
@@ -439,9 +439,11 @@ const ResetPassword = () => {
   useEffect(() => {
     if (!token) {
       showToast('Token de recuperación no válido', 'error');
-      navigate('/login');
+      // Usamos window.location para redirigir sin usar navigate en el efecto
+      window.location.href = '/login';
     }
-  }, [token, navigate, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
