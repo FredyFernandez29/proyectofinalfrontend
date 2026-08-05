@@ -368,7 +368,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const { showToast } = useToast();
-  const navigate = useNavigate();
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
