@@ -505,7 +505,7 @@ const TicketsList = () => {
 };
 
 // --- TicketForm ---
-// --- TicketForm (actualizado con campo de estado) ---
+// --- TicketForm (actualizado: maneja asignado_a vacío) ---
 const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -517,7 +517,7 @@ const TicketForm = () => {
     titulo: '',
     descripcion: '',
     prioridad: 'media',
-    estado: 'abierto',  // <--- NUEVO CAMPO
+    estado: 'abierto',
     asignado_a: ''
   });
   const [usuarios, setUsuarios] = useState([]);
@@ -527,6 +527,7 @@ const TicketForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Solo admin/tecnico pueden ver lista de usuarios para asignar
         if (user?.rol === 'admin' || user?.rol === 'tecnico') {
           const resUsuarios = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
           setUsuarios(resUsuarios.data);
@@ -538,7 +539,7 @@ const TicketForm = () => {
             titulo: t.titulo,
             descripcion: t.descripcion || '',
             prioridad: t.prioridad,
-            estado: t.estado || 'abierto',  // <--- CARGAR ESTADO
+            estado: t.estado || 'abierto',
             asignado_a: t.asignado_a?.id || ''
           });
         }
@@ -559,12 +560,19 @@ const TicketForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    // Preparar payload: si asignado_a es cadena vacía, enviar null
+    const payload = { ...formData };
+    if (payload.asignado_a === '') {
+      payload.asignado_a = null;
+    }
+
     try {
       if (isEdit) {
-        await axios.put(`${process.env.REACT_APP_API_URL}/tickets/${id}`, formData);
+        await axios.put(`${process.env.REACT_APP_API_URL}/tickets/${id}`, payload);
         showToast('Ticket actualizado correctamente', 'success');
       } else {
-        await axios.post(`${process.env.REACT_APP_API_URL}/tickets`, formData);
+        await axios.post(`${process.env.REACT_APP_API_URL}/tickets`, payload);
         showToast('Ticket creado correctamente', 'success');
       }
       navigate('/tickets');
@@ -595,7 +603,7 @@ const TicketForm = () => {
             <option value="alta">Alta</option>
           </select>
 
-          {/* CAMPO DE ESTADO - solo visible en edición */}
+          {/* Campo de estado - solo visible en edición */}
           {isEdit && (
             <>
               <label style={styles.label}>Estado</label>
@@ -607,6 +615,7 @@ const TicketForm = () => {
             </>
           )}
 
+          {/* Asignación - solo visible para admin y técnicos */}
           {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
             <>
               <label style={styles.label}>Asignar a</label>
