@@ -425,13 +425,14 @@ const ForgotPassword = () => {
 };
 
 // --- ResetPassword (CORREGIDO: navigate se usa solo en handleSubmit) ---
+// --- ResetPassword (CORREGIDO) ---
 const ResetPassword = () => {
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // <--- Se declara
 
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
@@ -439,11 +440,9 @@ const ResetPassword = () => {
   useEffect(() => {
     if (!token) {
       showToast('Token de recuperación no válido', 'error');
-      // Usamos window.location para redirigir sin usar navigate en el efecto
-      window.location.href = '/login';
+      navigate('/login');  // <--- SE USA AQUÍ
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, showToast]);
+  }, [token, navigate, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -462,7 +461,7 @@ const ResetPassword = () => {
         nueva_clave: nuevaClave
       });
       showToast('Contraseña actualizada correctamente', 'success');
-      navigate('/login');
+      navigate('/login');  // <--- SE USA AQUÍ TAMBIÉN
     } catch (error) {
       showToast(error.response?.data?.message || 'Error al restablecer la contraseña', 'error');
     } finally {
