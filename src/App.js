@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -52,7 +52,7 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================
-// 2. SISTEMA DE NOTIFICACIONES (Toast + Real-time Polling)
+// 2. SISTEMA DE NOTIFICACIONES
 // ============================
 const ToastContext = createContext();
 
@@ -129,7 +129,7 @@ const globalStyles = `
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES (extendidos)
+// 3. ESTILOS GLOBALES
 // ============================
 const styles = {
   container: {
@@ -158,11 +158,6 @@ const styles = {
     transition: 'all 0.2s',
     boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
   },
-  buttonHover: {
-    backgroundColor: '#1d4ed8',
-    transform: 'scale(1.02)',
-    boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
-  },
   buttonDanger: {
     backgroundColor: '#ef4444',
     color: '#fff',
@@ -174,6 +169,18 @@ const styles = {
     fontWeight: '600',
     transition: 'all 0.2s',
     boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
+  },
+  buttonSuccess: {
+    backgroundColor: '#10b981',
+    color: '#fff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
   },
   input: {
     width: '100%',
@@ -231,10 +238,6 @@ const styles = {
     padding: '4px 0',
     borderBottom: '2px solid transparent',
   },
-  linkActive: {
-    color: '#ffffff',
-    borderBottom: '2px solid #60a5fa',
-  },
   badge: {
     padding: '4px 14px',
     borderRadius: '30px',
@@ -283,23 +286,30 @@ const styles = {
     borderRadius: '50%',
     marginRight: '6px',
   },
-  tag: {
-    display: 'inline-block',
-    padding: '2px 10px',
-    borderRadius: '16px',
-    fontSize: '12px',
-    fontWeight: '500',
-    marginRight: '6px',
-    marginBottom: '4px',
-    backgroundColor: '#e0e7ff',
-    color: '#1e3a8a',
-  },
-  attachment: {
-    maxWidth: '200px',
-    maxHeight: '150px',
+  filterBar: {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: '16px',
+    padding: '16px',
+    background: '#f8fafc',
     borderRadius: '8px',
-    marginTop: '6px',
+  },
+  filterInput: {
+    padding: '8px 12px',
     border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    fontSize: '14px',
+    flex: '1',
+    minWidth: '200px',
+  },
+  filterSelect: {
+    padding: '8px 12px',
+    border: '1px solid #e2e8f0',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: '#fff',
   },
 };
 
@@ -328,7 +338,7 @@ const Navbar = () => {
   );
 };
 
-// --- Login (sin cambios) ---
+// --- Login ---
 const Login = () => {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
@@ -384,51 +394,76 @@ const Login = () => {
   );
 };
 
-// ============================
-// 5. TicketsList con Dashboard, Etiquetas y Polling
-// ============================
+// --- TicketsList con Dashboard, Filtros y Exportación ---
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
+  const [filteredTickets, setFilteredTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterEstado, setFilterEstado] = useState('');
+  const [filterPrioridad, setFilterPrioridad] = useState('');
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [lastChecked, setLastChecked] = useState(Date.now());
-  const intervalRef = useRef(null);
 
+  // Función para cargar tickets
   const fetchTickets = useCallback(async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
-      const newTickets = res.data;
-      // Detectar nuevos tickets asignados al usuario (para notificación)
-      if (user && user.id) {
-        const prevIds = new Set(tickets.map(t => t.id));
-        const newItems = newTickets.filter(t => !prevIds.has(t.id) && t.asignado_a?.id === user.id);
-        if (newItems.length > 0) {
-          showToast(`Tienes ${newItems.length} nuevo(s) ticket(s) asignado(s)`, 'info');
-        }
-      }
-      setTickets(newTickets);
+      setTickets(res.data);
+      setFilteredTickets(res.data);
     } catch (error) {
-      console.error('Error al cargar tickets:', error);
+      showToast('No se pudieron cargar los tickets', 'error');
     } finally {
       setLoading(false);
     }
-  }, [tickets, user, showToast]);
+  }, [showToast]);
 
+  // Cargar tickets al montar
   useEffect(() => {
     fetchTickets();
-    // Polling cada 10 segundos
-    intervalRef.current = setInterval(() => {
-      fetchTickets();
-    }, 10000);
-    return () => clearInterval(intervalRef.current);
   }, [fetchTickets]);
 
+  // ===== TIEMPO REAL: Polling cada 30 segundos =====
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchTickets();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [fetchTickets]);
+
+  // ===== FILTROS =====
+  useEffect(() => {
+    let result = tickets;
+
+    // Búsqueda por título
+    if (searchTerm.trim()) {
+      result = result.filter(t =>
+        t.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtro por estado
+    if (filterEstado) {
+      result = result.filter(t => t.estado === filterEstado);
+    }
+
+    // Filtro por prioridad
+    if (filterPrioridad) {
+      result = result.filter(t => t.prioridad === filterPrioridad);
+    }
+
+    setFilteredTickets(result);
+  }, [tickets, searchTerm, filterEstado, filterPrioridad]);
+
+  // ===== ELIMINAR TICKET =====
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este ticket?')) {
       try {
         await axios.delete(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-        setTickets(tickets.filter(t => t.id !== id));
+        const updatedTickets = tickets.filter(t => t.id !== id);
+        setTickets(updatedTickets);
+        setFilteredTickets(updatedTickets);
         showToast('Ticket eliminado correctamente', 'success');
       } catch (error) {
         showToast(error.response?.data?.message || 'Error al eliminar', 'error');
@@ -436,12 +471,44 @@ const TicketsList = () => {
     }
   };
 
+  // ===== EXPORTAR A CSV (Solo admin) =====
+  const exportToCSV = () => {
+    if (tickets.length === 0) {
+      showToast('No hay tickets para exportar', 'info');
+      return;
+    }
+
+    // Definir encabezados
+    const headers = ['ID', 'Título', 'Descripción', 'Estado', 'Prioridad', 'Creado por', 'Asignado a', 'Fecha creación'];
+    const rows = tickets.map(t => [
+      t.id,
+      t.titulo,
+      t.descripcion || '',
+      t.estado,
+      t.prioridad,
+      `${t.creado_por?.nombre || ''} ${t.creado_por?.apellido || ''}`.trim() || 'Sin nombre',
+      t.asignado_a?.nombre || 'Sin asignar',
+      new Date(t.created_at).toLocaleString()
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tickets_export_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showToast('Tickets exportados correctamente', 'success');
+  };
+
   // Estadísticas
-  const total = tickets.length;
-  const abiertos = tickets.filter(t => t.estado === 'abierto').length;
-  const enProgreso = tickets.filter(t => t.estado === 'en progreso').length;
-  const cerrados = tickets.filter(t => t.estado === 'cerrado').length;
-  const alta = tickets.filter(t => t.prioridad === 'alta').length;
+  const total = filteredTickets.length;
+  const abiertos = filteredTickets.filter(t => t.estado === 'abierto').length;
+  const enProgreso = filteredTickets.filter(t => t.estado === 'en progreso').length;
+  const cerrados = filteredTickets.filter(t => t.estado === 'cerrado').length;
+  const alta = filteredTickets.filter(t => t.prioridad === 'alta').length;
+  const media = filteredTickets.filter(t => t.prioridad === 'media').length;
+  const baja = filteredTickets.filter(t => t.prioridad === 'baja').length;
 
   const getEstadoColor = (estado) => {
     const colores = { 'abierto': '#10b981', 'en progreso': '#f59e0b', 'cerrado': '#94a3b8' };
@@ -453,19 +520,11 @@ const TicketsList = () => {
     return colores[prioridad] || '#94a3b8';
   };
 
-  // Renderizar etiquetas como badges
-  const renderTags = (etiquetas) => {
-    if (!etiquetas) return null;
-    const tags = etiquetas.split(',').map(t => t.trim()).filter(t => t);
-    return tags.map((tag, idx) => (
-      <span key={idx} style={styles.tag}>{tag}</span>
-    ));
-  };
-
   if (loading) return <div style={styles.loading}>Cargando tickets...</div>;
 
   return (
     <div style={styles.container}>
+      {/* Dashboard de Estadísticas */}
       <div style={styles.statGrid}>
         <div style={styles.statCard} className="fade-in">
           <div style={styles.statNumber}>{total}</div>
@@ -487,18 +546,80 @@ const TicketsList = () => {
           <div style={{ ...styles.statNumber, color: '#ef4444' }}>{alta}</div>
           <div style={styles.statLabel}>Prioridad Alta</div>
         </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={{ ...styles.statNumber, color: '#f59e0b' }}>{media}</div>
+          <div style={styles.statLabel}>Prioridad Media</div>
+        </div>
+        <div style={styles.statCard} className="fade-in">
+          <div style={{ ...styles.statNumber, color: '#10b981' }}>{baja}</div>
+          <div style={styles.statLabel}>Prioridad Baja</div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      {/* Barra de acciones: Crear ticket + Exportar CSV */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <h2 style={{ color: '#0b2b44', fontSize: '22px', fontWeight: '700' }}>Mis Tickets</h2>
-        <Link to="/tickets/nuevo">
-          <button style={styles.button}>+ Crear Nuevo Ticket</button>
-        </Link>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {user?.rol === 'admin' && (
+            <button onClick={exportToCSV} style={styles.buttonSuccess}>
+              Exportar CSV
+            </button>
+          )}
+          <Link to="/tickets/nuevo">
+            <button style={styles.button}>+ Crear Nuevo Ticket</button>
+          </Link>
+        </div>
       </div>
 
+      {/* Filtros avanzados */}
+      <div style={styles.filterBar}>
+        <input
+          type="text"
+          placeholder="Buscar por título..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={styles.filterInput}
+        />
+        <select
+          value={filterEstado}
+          onChange={(e) => setFilterEstado(e.target.value)}
+          style={styles.filterSelect}
+        >
+          <option value="">Todos los estados</option>
+          <option value="abierto">Abierto</option>
+          <option value="en progreso">En Progreso</option>
+          <option value="cerrado">Cerrado</option>
+        </select>
+        <select
+          value={filterPrioridad}
+          onChange={(e) => setFilterPrioridad(e.target.value)}
+          style={styles.filterSelect}
+        >
+          <option value="">Todas las prioridades</option>
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
+        {(searchTerm || filterEstado || filterPrioridad) && (
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setFilterEstado('');
+              setFilterPrioridad('');
+            }}
+            style={{ ...styles.buttonDanger, padding: '8px 16px' }}
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
+      {/* Tabla de tickets */}
       <div style={styles.card} className="fade-in">
-        {tickets.length === 0 ? (
-          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>No tienes tickets. ¡Crea uno nuevo!</p>
+        {filteredTickets.length === 0 ? (
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>
+            {tickets.length === 0 ? 'No tienes tickets. ¡Crea uno nuevo!' : 'No hay tickets que coincidan con los filtros.'}
+          </p>
         ) : (
           <table style={styles.table}>
             <thead>
@@ -507,13 +628,12 @@ const TicketsList = () => {
                 <th style={styles.th}>Título</th>
                 <th style={styles.th}>Estado</th>
                 <th style={styles.th}>Prioridad</th>
-                <th style={styles.th}>Etiquetas</th>
                 <th style={styles.th}>Asignado a</th>
                 <th style={styles.th}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {tickets.map(t => (
+              {filteredTickets.map(t => (
                 <tr key={t.id} className="fade-in" style={{ transition: 'background 0.15s' }}>
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
@@ -531,9 +651,6 @@ const TicketsList = () => {
                       <span style={{ ...styles.priorityDot, backgroundColor: getPrioridadColor(t.prioridad) }}></span>
                       {t.prioridad}
                     </span>
-                  </td>
-                  <td style={styles.td}>
-                    {renderTags(t.etiquetas)}
                   </td>
                   <td style={styles.td}>{t.asignado_a?.nombre || 'Sin asignar'}</td>
                   <td style={styles.td}>
@@ -553,9 +670,7 @@ const TicketsList = () => {
   );
 };
 
-// ============================
-// 6. TicketForm con Etiquetas
-// ============================
+// --- TicketForm ---
 const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -567,8 +682,7 @@ const TicketForm = () => {
     titulo: '',
     descripcion: '',
     prioridad: 'media',
-    asignado_a: '',
-    etiquetas: ''
+    asignado_a: ''
   });
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -588,8 +702,7 @@ const TicketForm = () => {
             titulo: t.titulo,
             descripcion: t.descripcion || '',
             prioridad: t.prioridad,
-            asignado_a: t.asignado_a?.id || '',
-            etiquetas: t.etiquetas || ''
+            asignado_a: t.asignado_a?.id || ''
           });
         }
       } catch (error) {
@@ -642,8 +755,6 @@ const TicketForm = () => {
             <option value="media">Media</option>
             <option value="alta">Alta</option>
           </select>
-          <label style={styles.label}>Etiquetas (separadas por coma)</label>
-          <input type="text" name="etiquetas" value={formData.etiquetas} onChange={handleChange} placeholder="Ej: frontend, urgente, bug" style={styles.input} />
           {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
             <>
               <label style={styles.label}>Asignar a</label>
@@ -663,9 +774,7 @@ const TicketForm = () => {
   );
 };
 
-// ============================
-// 7. TicketDetail con Comentarios + Adjuntos
-// ============================
+// --- TicketDetail ---
 const TicketDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -673,7 +782,6 @@ const TicketDetail = () => {
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState('');
-  const [nuevoAdjunto, setNuevoAdjunto] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -696,40 +804,20 @@ const TicketDetail = () => {
 
   const agregarComentario = async (e) => {
     e.preventDefault();
-    if (!nuevoComentario.trim() && !nuevoAdjunto) {
-      showToast('Escribe un comentario o adjunta un archivo', 'error');
+    if (!nuevoComentario.trim()) {
+      showToast('El comentario no puede estar vacío', 'error');
       return;
     }
     try {
-      // Procesar adjunto a base64 si existe
-      let adjuntoBase64 = null;
-      if (nuevoAdjunto) {
-        const reader = new FileReader();
-        const fileData = await new Promise((resolve) => {
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(nuevoAdjunto);
-        });
-        adjuntoBase64 = fileData;
-      }
-      const payload = {
-        contenido: nuevoComentario,
-        adjunto: adjuntoBase64
-      };
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/tickets/${id}/comentarios`, payload);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/tickets/${id}/comentarios`, {
+        contenido: nuevoComentario
+      });
       const nuevo = res.data[0];
       setComentarios([...comentarios, { ...nuevo, usuarios: user }]);
       setNuevoComentario('');
-      setNuevoAdjunto(null);
       showToast('Comentario agregado', 'success');
     } catch (error) {
       showToast('Error al agregar comentario', 'error');
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setNuevoAdjunto(file);
     }
   };
 
@@ -746,14 +834,6 @@ const TicketDetail = () => {
     return colores[prioridad] || '#94a3b8';
   };
 
-  const renderTags = (etiquetas) => {
-    if (!etiquetas) return null;
-    const tags = etiquetas.split(',').map(t => t.trim()).filter(t => t);
-    return tags.map((tag, idx) => (
-      <span key={idx} style={styles.tag}>{tag}</span>
-    ));
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
@@ -761,7 +841,6 @@ const TicketDetail = () => {
         <p><strong>Descripción:</strong> {ticket.descripcion || 'Sin descripción'}</p>
         <p><strong>Estado:</strong> <span style={{ ...styles.badge, backgroundColor: getEstadoColor(ticket.estado) }}>{ticket.estado}</span></p>
         <p><strong>Prioridad:</strong> <span style={{ display: 'inline-flex', alignItems: 'center' }}><span style={{ ...styles.priorityDot, backgroundColor: getPrioridadColor(ticket.prioridad) }}></span> {ticket.prioridad}</span></p>
-        <p><strong>Etiquetas:</strong> {renderTags(ticket.etiquetas) || 'Ninguna'}</p>
         <p><strong>Creado por:</strong> {ticket.creado_por?.nombre} {ticket.creado_por?.apellido}</p>
         <p><strong>Asignado a:</strong> {ticket.asignado_a?.nombre || 'Sin asignar'}</p>
         <p><strong>Fecha creación:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
@@ -773,7 +852,6 @@ const TicketDetail = () => {
           <button style={{ ...styles.button, backgroundColor: '#94a3b8', boxShadow: 'none' }}>Volver</button>
         </Link>
       </div>
-
       <div style={styles.card} className="fade-in">
         <h3 style={{ color: '#0b2b44', fontSize: '18px', fontWeight: '600' }}>Comentarios</h3>
         {comentarios.length === 0 ? (
@@ -787,27 +865,12 @@ const TicketDetail = () => {
                   {new Date(c.created_at).toLocaleString()}
                 </span>
                 <p style={{ margin: '6px 0 0', color: '#1e293b' }}>{c.contenido}</p>
-                {c.adjunto && (
-                  <div>
-                    {c.adjunto.startsWith('data:image') ? (
-                      <img src={c.adjunto} alt="adjunto" style={styles.attachment} />
-                    ) : (
-                      <a href={c.adjunto} target="_blank" rel="noopener noreferrer">Ver adjunto</a>
-                    )}
-                  </div>
-                )}
               </li>
             ))}
           </ul>
         )}
-
         <form onSubmit={agregarComentario} style={{ marginTop: '16px' }}>
           <textarea placeholder="Escribe un comentario..." value={nuevoComentario} onChange={(e) => setNuevoComentario(e.target.value)} rows="3" style={styles.input} />
-          <div style={{ marginBottom: '12px' }}>
-            <label style={styles.label}>Adjuntar archivo (imagen o documento)</label>
-            <input type="file" onChange={handleFileChange} style={styles.input} accept="image/*,.pdf,.doc,.docx" />
-            {nuevoAdjunto && <span style={{ color: '#64748b', fontSize: '14px' }}>{nuevoAdjunto.name}</span>}
-          </div>
           <button type="submit" style={styles.button}>Agregar comentario</button>
         </form>
       </div>
@@ -816,8 +879,10 @@ const TicketDetail = () => {
 };
 
 // ============================
-// 8. COMPONENTES DE USUARIOS (sin cambios)
+// 5. COMPONENTES DE USUARIOS
 // ============================
+
+// --- UserForm ---
 const UserForm = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -881,6 +946,7 @@ const UserForm = () => {
   );
 };
 
+// --- UsuariosList ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -932,7 +998,7 @@ const UsuariosList = () => {
 };
 
 // ============================
-// 9. APP PRINCIPAL
+// 6. APP PRINCIPAL
 // ============================
 function App() {
   const ProtectedRoute = ({ children }) => {
