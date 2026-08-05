@@ -108,7 +108,6 @@ const toastStyles = {
   info: { backgroundColor: '#17a2b8' },
 };
 
-// Inyectar animación CSS global
 const globalStyles = `
   @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
@@ -129,7 +128,7 @@ const globalStyles = `
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES (Tema azul/blanco/negro)
+// 3. ESTILOS GLOBALES
 // ============================
 const styles = {
   container: {
@@ -147,10 +146,6 @@ const styles = {
     transition: 'box-shadow 0.25s ease, transform 0.2s ease',
     border: '1px solid rgba(0, 80, 150, 0.08)',
   },
-  cardHover: {
-    boxShadow: '0 8px 30px rgba(0, 50, 100, 0.20)',
-    transform: 'translateY(-2px)',
-  },
   button: {
     backgroundColor: '#0066cc',
     color: '#ffffff',
@@ -162,11 +157,6 @@ const styles = {
     fontWeight: '600',
     transition: 'background 0.2s, transform 0.15s, box-shadow 0.2s',
     boxShadow: '0 2px 6px rgba(0, 80, 160, 0.25)',
-  },
-  buttonHover: {
-    backgroundColor: '#004d99',
-    transform: 'scale(1.02)',
-    boxShadow: '0 4px 12px rgba(0, 80, 160, 0.35)',
   },
   buttonDanger: {
     backgroundColor: '#dc3545',
@@ -190,10 +180,6 @@ const styles = {
     boxSizing: 'border-box',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     backgroundColor: '#fafcff',
-  },
-  inputFocus: {
-    borderColor: '#0066cc',
-    boxShadow: '0 0 0 3px rgba(0, 102, 204, 0.20)',
   },
   label: {
     fontWeight: '600',
@@ -235,9 +221,6 @@ const styles = {
     fontWeight: '500',
     transition: 'color 0.2s',
   },
-  linkHover: {
-    color: '#ffffff',
-  },
   badge: {
     padding: '4px 12px',
     borderRadius: '20px',
@@ -258,7 +241,7 @@ const styles = {
 // 4. COMPONENTES
 // ============================
 
-// --- Navbar (sin emoji) ---
+// --- Navbar ---
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -272,11 +255,9 @@ const Navbar = () => {
     <div style={styles.nav}>
       <span style={{ fontWeight: '700', fontSize: '18px' }}>Ticket System</span>
       <span style={{ marginLeft: 'auto' }}>Rol: <strong style={{ color: '#8bb9fe' }}>{user?.rol || 'invitado'}</strong></span>
-      <Link to="/tickets" style={styles.link} onMouseEnter={(e) => e.target.style.color = '#ffffff'} onMouseLeave={(e) => e.target.style.color = '#8bb9fe'}>Mis Tickets</Link>
-      {user?.rol === 'admin' && (
-        <Link to="/usuarios" style={styles.link} onMouseEnter={(e) => e.target.style.color = '#ffffff'} onMouseLeave={(e) => e.target.style.color = '#8bb9fe'}>Usuarios</Link>
-      )}
-      <button onClick={handleLogout} style={{ ...styles.button, backgroundColor: '#dc3545', boxShadow: '0 2px 6px rgba(220, 53, 69, 0.3)' }}>Cerrar Sesión</button>
+      <Link to="/tickets" style={styles.link}>Mis Tickets</Link>
+      {user?.rol === 'admin' && <Link to="/usuarios" style={styles.link}>Usuarios</Link>}
+      <button onClick={handleLogout} style={{ ...styles.button, backgroundColor: '#dc3545' }}>Cerrar Sesión</button>
     </div>
   );
 };
@@ -317,8 +298,6 @@ const Login = () => {
             onChange={(e) => setCorreo(e.target.value)}
             required
             style={styles.input}
-            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
           <input
             type="password"
@@ -327,10 +306,8 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             style={styles.input}
-            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
-          <button type="submit" style={styles.button} disabled={loading} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
+          <button type="submit" style={styles.button} disabled={loading}>
             {loading ? 'Cargando...' : 'Ingresar'}
           </button>
           {error && <p style={{ color: '#dc3545', marginTop: '12px' }}>{error}</p>}
@@ -352,7 +329,6 @@ const TicketsList = () => {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
       setTickets(res.data);
     } catch (error) {
-      console.error('Error al cargar tickets:', error);
       showToast('No se pudieron cargar los tickets', 'error');
     } finally {
       setLoading(false);
@@ -391,12 +367,9 @@ const TicketsList = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#0b2b44' }}>Mis Tickets</h2>
         <Link to="/tickets/nuevo">
-          <button style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
-            + Crear Nuevo Ticket
-          </button>
+          <button style={styles.button}>+ Crear Nuevo Ticket</button>
         </Link>
       </div>
-
       <div style={styles.card} className="fade-in">
         {tickets.length === 0 ? (
           <p style={{ color: '#4a6a85' }}>No tienes tickets. ¡Crea uno nuevo!</p>
@@ -414,25 +387,21 @@ const TicketsList = () => {
             </thead>
             <tbody>
               {tickets.map(t => (
-                <tr key={t.id} className="fade-in" style={{ transition: 'background 0.2s' }}>
+                <tr key={t.id} className="fade-in">
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ color: '#0066cc', textDecoration: 'none', fontWeight: '500' }}>
-                      {t.titulo}
-                    </Link>
+                    <Link to={`/tickets/${t.id}`} style={{ color: '#0066cc', fontWeight: '500' }}>{t.titulo}</Link>
                   </td>
                   <td style={styles.td}>
-                    <span style={{ ...styles.badge, backgroundColor: getEstadoColor(t.estado) }}>
-                      {t.estado}
-                    </span>
+                    <span style={{ ...styles.badge, backgroundColor: getEstadoColor(t.estado) }}>{t.estado}</span>
                   </td>
                   <td style={styles.td}>{t.prioridad}</td>
                   <td style={styles.td}>{t.asignado_a?.nombre || 'Sin asignar'}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#0066cc', fontWeight: '500' }}>Ver</Link>
-                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '12px', color: '#28a745', fontWeight: '500' }}>Editar</Link>
+                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#0066cc' }}>Ver</Link>
+                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '12px', color: '#28a745' }}>Editar</Link>
                     {user?.rol === 'admin' && (
-                      <button onClick={() => handleDelete(t.id)} style={styles.buttonDanger} onMouseEnter={(e) => { e.target.style.backgroundColor = '#c82333'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#dc3545'; }}>Eliminar</button>
+                      <button onClick={() => handleDelete(t.id)} style={styles.buttonDanger}>Eliminar</button>
                     )}
                   </td>
                 </tr>
@@ -470,7 +439,6 @@ const TicketForm = () => {
           const resUsuarios = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
           setUsuarios(resUsuarios.data);
         }
-
         if (isEdit) {
           const resTicket = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
           const t = resTicket.data;
@@ -482,7 +450,6 @@ const TicketForm = () => {
           });
         }
       } catch (error) {
-        console.error('Error cargando datos:', error);
         showToast('Error al cargar los datos', 'error');
         if (isEdit) navigate('/tickets');
       } finally {
@@ -523,62 +490,27 @@ const TicketForm = () => {
         <h2 style={{ color: '#0b2b44' }}>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Título</label>
-          <input
-            type="text"
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-            required
-            style={styles.input}
-            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
-          />
-
+          <input type="text" name="titulo" value={formData.titulo} onChange={handleChange} required style={styles.input} />
           <label style={styles.label}>Descripción</label>
-          <textarea
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-            rows="4"
-            style={{ ...styles.input, resize: 'vertical' }}
-            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
-          />
-
+          <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows="4" style={{ ...styles.input, resize: 'vertical' }} />
           <label style={styles.label}>Prioridad</label>
-          <select
-            name="prioridad"
-            value={formData.prioridad}
-            onChange={handleChange}
-            style={styles.input}
-          >
+          <select name="prioridad" value={formData.prioridad} onChange={handleChange} style={styles.input}>
             <option value="baja">Baja</option>
             <option value="media">Media</option>
             <option value="alta">Alta</option>
           </select>
-
           {(user?.rol === 'admin' || user?.rol === 'tecnico') && (
             <>
               <label style={styles.label}>Asignar a</label>
-              <select
-                name="asignado_a"
-                value={formData.asignado_a}
-                onChange={handleChange}
-                style={styles.input}
-              >
+              <select name="asignado_a" value={formData.asignado_a} onChange={handleChange} style={styles.input}>
                 <option value="">Sin asignar</option>
-                {usuarios
-                  .filter(u => u.rol === 'tecnico' || u.rol === 'admin')
-                  .map(u => (
-                    <option key={u.id} value={u.id}>{u.nombre} {u.apellido}</option>
-                  ))}
+                {usuarios.filter(u => u.rol === 'tecnico' || u.rol === 'admin').map(u => (
+                  <option key={u.id} value={u.id}>{u.nombre} {u.apellido}</option>
+                ))}
               </select>
             </>
           )}
-
-          <button type="submit" style={styles.button} disabled={loading} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
-            {loading ? 'Guardando...' : 'Guardar'}
-          </button>
+          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
           <Link to="/tickets" style={{ marginLeft: '12px', color: '#6c757d' }}>Cancelar</Link>
         </form>
       </div>
@@ -599,14 +531,11 @@ const TicketDetail = () => {
 
   const cargarTicket = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
       setTicket(res.data);
       setComentarios(res.data.comentarios || []);
     } catch (error) {
-      console.error('Error al cargar ticket:', error);
-      const msg = error.response?.data?.message || 'Error al cargar el ticket';
-      showToast(msg, 'error');
+      showToast('Error al cargar el ticket', 'error');
       navigate('/tickets');
     } finally {
       setLoading(false);
@@ -640,11 +569,7 @@ const TicketDetail = () => {
   if (!ticket) return <div style={styles.container}>Ticket no encontrado</div>;
 
   const getEstadoColor = (estado) => {
-    const colores = {
-      'abierto': '#28a745',
-      'en progreso': '#ffc107',
-      'cerrado': '#6c757d'
-    };
+    const colores = { 'abierto': '#28a745', 'en progreso': '#ffc107', 'cerrado': '#6c757d' };
     return colores[estado] || '#6c757d';
   };
 
@@ -659,22 +584,20 @@ const TicketDetail = () => {
         <p><strong>Asignado a:</strong> {ticket.asignado_a?.nombre || 'Sin asignar'}</p>
         <p><strong>Fecha creación:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
         <p><strong>Última actualización:</strong> {new Date(ticket.updated_at).toLocaleString()}</p>
-
         <Link to={`/tickets/editar/${ticket.id}`} style={{ marginRight: '12px' }}>
-          <button style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>Editar</button>
+          <button style={styles.button}>Editar</button>
         </Link>
         <Link to="/tickets">
-          <button style={{ ...styles.button, backgroundColor: '#6c757d', boxShadow: '0 2px 6px rgba(108, 117, 125, 0.25)' }} onMouseEnter={(e) => { e.target.style.backgroundColor = '#5a6268'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#6c757d'; }}>Volver</button>
+          <button style={{ ...styles.button, backgroundColor: '#6c757d' }}>Volver</button>
         </Link>
       </div>
-
       <div style={styles.card} className="fade-in">
         <h3 style={{ color: '#0b2b44' }}>Comentarios</h3>
         {comentarios.length === 0 ? (
           <p style={{ color: '#4a6a85' }}>No hay comentarios aún.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {comentarios.map(c => (  
+            {comentarios.map(c => (
               <li key={c.id} style={{ borderBottom: '1px solid #e2e8f0', padding: '12px 0' }} className="fade-in">
                 <strong style={{ color: '#0b2b44' }}>{c.usuarios?.nombre} {c.usuarios?.apellido}</strong>
                 <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '12px' }}>
@@ -685,46 +608,107 @@ const TicketDetail = () => {
             ))}
           </ul>
         )}
-
         <form onSubmit={agregarComentario} style={{ marginTop: '16px' }}>
-          <textarea
-            placeholder="Escribe un comentario..."
-            value={nuevoComentario}
-            onChange={(e) => setNuevoComentario(e.target.value)}
-            rows="3"
-            style={styles.input}
-            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
-            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
-          />
-          <button type="submit" style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>Agregar comentario</button>
+          <textarea placeholder="Escribe un comentario..." value={nuevoComentario} onChange={(e) => setNuevoComentario(e.target.value)} rows="3" style={styles.input} />
+          <button type="submit" style={styles.button}>Agregar comentario</button>
         </form>
       </div>
     </div>
   );
 };
 
-// --- UsuariosList ---
+// ============================
+// 5. COMPONENTES DE USUARIOS
+// ============================
+
+// --- UserForm (Crear/Editar usuario) ---
+const UserForm = () => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [formData, setFormData] = useState({
+    nombre: '',
+    apellido: '',
+    correo: '',
+    clave: '',
+    telefono: '',
+    edad: '',
+    rol: 'cliente'
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/usuarios`, formData);
+      showToast('Usuario creado correctamente', 'success');
+      navigate('/usuarios');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Error al crear usuario', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.card} className="fade-in">
+        <h2 style={{ color: '#0b2b44' }}>Crear Nuevo Usuario</h2>
+        <form onSubmit={handleSubmit}>
+          <label style={styles.label}>Nombre</label>
+          <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required style={styles.input} />
+          <label style={styles.label}>Apellido</label>
+          <input type="text" name="apellido" value={formData.apellido} onChange={handleChange} required style={styles.input} />
+          <label style={styles.label}>Correo</label>
+          <input type="email" name="correo" value={formData.correo} onChange={handleChange} required style={styles.input} />
+          <label style={styles.label}>Contraseña</label>
+          <input type="password" name="clave" value={formData.clave} onChange={handleChange} required style={styles.input} />
+          <label style={styles.label}>Teléfono</label>
+          <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} style={styles.input} />
+          <label style={styles.label}>Edad</label>
+          <input type="number" name="edad" value={formData.edad} onChange={handleChange} style={styles.input} />
+          <label style={styles.label}>Rol</label>
+          <select name="rol" value={formData.rol} onChange={handleChange} style={styles.input}>
+            <option value="cliente">Cliente</option>
+            <option value="tecnico">Técnico</option>
+            <option value="admin">Administrador</option>
+          </select>
+          <button type="submit" style={styles.button} disabled={loading}>{loading ? 'Creando...' : 'Crear Usuario'}</button>
+          <Link to="/usuarios" style={{ marginLeft: '12px', color: '#6c757d' }}>Cancelar</Link>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- UsuariosList (con botón Crear) ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (user?.rol === 'admin') {
-      axios.get(`${process.env.REACT_APP_API_URL}/usuarios`)
-        .then(res => setUsuarios(res.data))
-        .catch(() => showToast('Error al cargar usuarios', 'error'))
-        .finally(() => setLoading(false));
-    }
-  }, [user, showToast]);
+    axios.get(`${process.env.REACT_APP_API_URL}/usuarios`)
+      .then(res => setUsuarios(res.data))
+      .catch(() => showToast('Error al cargar usuarios', 'error'))
+      .finally(() => setLoading(false));
+  }, [showToast]);
 
   if (loading) return <div style={styles.loading}>Cargando usuarios...</div>;
 
   return (
     <div style={styles.container}>
-      <div style={styles.card} className="fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#0b2b44' }}>Administración de Usuarios</h2>
+        <Link to="/usuarios/nuevo">
+          <button style={styles.button}>+ Crear Usuario</button>
+        </Link>
+      </div>
+      <div style={styles.card} className="fade-in">
         <table style={styles.table}>
           <thead>
             <tr>
@@ -753,7 +737,7 @@ const UsuariosList = () => {
 };
 
 // ============================
-// 5. APP PRINCIPAL
+// 6. APP PRINCIPAL
 // ============================
 function App() {
   const ProtectedRoute = ({ children }) => {
@@ -783,6 +767,7 @@ function App() {
             <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
             <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
             <Route path="/usuarios" element={<AdminRoute><UsuariosList /></AdminRoute>} />
+            <Route path="/usuarios/nuevo" element={<AdminRoute><UserForm /></AdminRoute>} />
             <Route path="/" element={<Navigate to="/tickets" />} />
           </Routes>
         </BrowserRouter>
