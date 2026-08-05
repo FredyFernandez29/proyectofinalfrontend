@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 // ============================
@@ -301,7 +301,7 @@ const Navbar = () => {
   );
 };
 
-// --- Login ---
+// --- Login (sin "olvidaste contraseña") ---
 const Login = () => {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
@@ -351,147 +351,6 @@ const Login = () => {
             {loading ? 'Cargando...' : 'Ingresar'}
           </button>
           {error && <p style={{ color: '#ef4444', marginTop: '16px' }}>{error}</p>}
-        </form>
-        <div style={{ marginTop: '16px', textAlign: 'center' }}>
-          <Link to="/forgot-password" style={{ color: '#2563eb', textDecoration: 'none' }}>
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- ForgotPassword ---
-const ForgotPassword = () => {
-  const [correo, setCorreo] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [enviado, setEnviado] = useState(false);
-  const { showToast } = useToast();
-  
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/recuperar-contrasena`, { correo });
-      setEnviado(true);
-      showToast('Si el correo existe, recibirás un enlace de recuperación', 'info');
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Error al solicitar recuperación', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (enviado) {
-    return (
-      <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
-        <div style={styles.card} className="fade-in">
-          <h2 style={{ color: '#0b2b44' }}>Revisa tu correo</h2>
-          <p style={{ color: '#64748b' }}>Hemos enviado un enlace de recuperación a tu correo electrónico.</p>
-          <Link to="/login" style={{ color: '#2563eb' }}>Volver al inicio de sesión</Link>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
-      <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>Recuperar Contraseña</h2>
-        <p style={{ color: '#64748b', marginBottom: '24px' }}>Ingresa tu correo para recibir un enlace de recuperación.</p>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={correo}
-            onChange={(e) => setCorreo(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Enviando...' : 'Enviar enlace'}
-          </button>
-        </form>
-        <div style={{ marginTop: '16px', textAlign: 'center' }}>
-          <Link to="/login" style={{ color: '#2563eb', textDecoration: 'none' }}>
-            Volver al inicio de sesión
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- ResetPassword (CORREGIDO: SIN NAVIGATE) ---
-const ResetPassword = () => {
-  const [nuevaClave, setNuevaClave] = useState('');
-  const [confirmarClave, setConfirmarClave] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { showToast } = useToast();
-  const location = useLocation();
-
-  const queryParams = new URLSearchParams(location.search);
-  const token = queryParams.get('token');
-
-  useEffect(() => {
-    if (!token) {
-      showToast('Token de recuperación no válido', 'error');
-    }
-  }, [token, showToast]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (nuevaClave.length < 6) {
-      showToast('La contraseña debe tener al menos 6 caracteres', 'error');
-      return;
-    }
-    if (nuevaClave !== confirmarClave) {
-      showToast('Las contraseñas no coinciden', 'error');
-      return;
-    }
-    setLoading(true);
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/reset-password`, {
-        token,
-        nueva_clave: nuevaClave
-      });
-      showToast('Contraseña actualizada correctamente', 'success');
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Error al restablecer la contraseña', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!token) return null;
-
-  return (
-    <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
-      <div style={styles.card} className="fade-in">
-        <h2 style={{ color: '#0b2b44' }}>Restablecer Contraseña</h2>
-        <p style={{ color: '#64748b', marginBottom: '24px' }}>Ingresa tu nueva contraseña.</p>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="password"
-            placeholder="Nueva contraseña"
-            value={nuevaClave}
-            onChange={(e) => setNuevaClave(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <input
-            type="password"
-            placeholder="Confirmar contraseña"
-            value={confirmarClave}
-            onChange={(e) => setConfirmarClave(e.target.value)}
-            required
-            style={styles.input}
-          />
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Actualizando...' : 'Actualizar contraseña'}
-          </button>
         </form>
       </div>
     </div>
@@ -998,8 +857,6 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/tickets" element={<ProtectedRoute><TicketsList /></ProtectedRoute>} />
             <Route path="/tickets/nuevo" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
             <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
