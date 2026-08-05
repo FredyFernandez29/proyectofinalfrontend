@@ -98,7 +98,7 @@ const toastStyles = {
     borderRadius: '8px',
     color: '#fff',
     fontWeight: '500',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
     animation: 'slideIn 0.3s ease-out',
     minWidth: '250px',
     maxWidth: '400px',
@@ -121,10 +121,15 @@ const globalStyles = `
   .fade-in {
     animation: fadeIn 0.3s ease-out;
   }
+  body {
+    background: #f0f4f8;
+    margin: 0;
+    padding: 0;
+  }
 `;
 
 // ============================
-// 3. ESTILOS GLOBALES
+// 3. ESTILOS GLOBALES (Tema azul/blanco/negro)
 // ============================
 const styles = {
   container: {
@@ -134,59 +139,67 @@ const styles = {
     fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
   },
   card: {
-    background: '#fff',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    padding: '20px',
-    marginBottom: '20px',
-    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+    background: '#ffffff',
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px rgba(0, 50, 100, 0.12)',
+    padding: '24px',
+    marginBottom: '24px',
+    transition: 'box-shadow 0.25s ease, transform 0.2s ease',
+    border: '1px solid rgba(0, 80, 150, 0.08)',
   },
   cardHover: {
-    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    boxShadow: '0 8px 30px rgba(0, 50, 100, 0.20)',
     transform: 'translateY(-2px)',
   },
   button: {
-    backgroundColor: '#007bff',
-    color: '#fff',
+    backgroundColor: '#0066cc',
+    color: '#ffffff',
     border: 'none',
-    padding: '8px 16px',
-    borderRadius: '4px',
+    padding: '10px 20px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '14px',
-    transition: 'background 0.2s, transform 0.15s',
+    fontWeight: '600',
+    transition: 'background 0.2s, transform 0.15s, box-shadow 0.2s',
+    boxShadow: '0 2px 6px rgba(0, 80, 160, 0.25)',
   },
   buttonHover: {
-    backgroundColor: '#0056b3',
+    backgroundColor: '#004d99',
     transform: 'scale(1.02)',
+    boxShadow: '0 4px 12px rgba(0, 80, 160, 0.35)',
   },
   buttonDanger: {
     backgroundColor: '#dc3545',
     color: '#fff',
     border: 'none',
     padding: '8px 16px',
-    borderRadius: '4px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '14px',
-    transition: 'background 0.2s',
+    fontWeight: '600',
+    transition: 'background 0.2s, box-shadow 0.2s',
+    boxShadow: '0 2px 6px rgba(220, 53, 69, 0.25)',
   },
   input: {
     width: '100%',
-    padding: '10px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
+    padding: '12px',
+    border: '1px solid #cbd5e1',
+    borderRadius: '6px',
     fontSize: '14px',
-    marginBottom: '10px',
+    marginBottom: '12px',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s, box-shadow 0.2s',
+    backgroundColor: '#fafcff',
   },
   inputFocus: {
-    borderColor: '#80bdff',
-    boxShadow: '0 0 0 0.2rem rgba(0,123,255,0.25)',
+    borderColor: '#0066cc',
+    boxShadow: '0 0 0 3px rgba(0, 102, 204, 0.20)',
   },
   label: {
     fontWeight: '600',
     display: 'block',
-    marginBottom: '5px',
+    marginBottom: '6px',
+    color: '#1e293b',
   },
   table: {
     width: '100%',
@@ -194,40 +207,50 @@ const styles = {
     marginTop: '10px',
   },
   th: {
-    background: '#f8f9fa',
-    padding: '10px',
+    background: '#e8f0fe',
+    padding: '12px',
     textAlign: 'left',
-    borderBottom: '2px solid #dee2e6',
+    borderBottom: '2px solid #b8d0e8',
+    color: '#0b2b44',
+    fontWeight: '600',
   },
   td: {
-    padding: '10px',
-    borderBottom: '1px solid #dee2e6',
+    padding: '12px',
+    borderBottom: '1px solid #e2e8f0',
   },
   nav: {
     display: 'flex',
-    gap: '20px',
+    gap: '24px',
     alignItems: 'center',
-    padding: '10px 20px',
-    background: '#f8f9fa',
-    borderRadius: '8px',
-    marginBottom: '20px',
+    padding: '12px 24px',
+    background: '#0b2b44',
+    borderRadius: '10px',
+    marginBottom: '24px',
+    boxShadow: '0 4px 16px rgba(0, 20, 40, 0.25)',
+    color: '#ffffff',
   },
   link: {
     textDecoration: 'none',
-    color: '#007bff',
+    color: '#8bb9fe',
+    fontWeight: '500',
+    transition: 'color 0.2s',
+  },
+  linkHover: {
+    color: '#ffffff',
   },
   badge: {
-    padding: '4px 8px',
-    borderRadius: '12px',
+    padding: '4px 12px',
+    borderRadius: '20px',
     fontSize: '12px',
     fontWeight: 'bold',
     color: '#fff',
+    display: 'inline-block',
   },
   loading: {
     textAlign: 'center',
-    padding: '40px',
+    padding: '60px',
     fontSize: '18px',
-    color: '#6c757d',
+    color: '#4a6a85',
   },
 };
 
@@ -235,7 +258,7 @@ const styles = {
 // 4. COMPONENTES
 // ============================
 
-// --- Navbar ---
+// --- Navbar (sin emoji) ---
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -247,11 +270,13 @@ const Navbar = () => {
 
   return (
     <div style={styles.nav}>
-      <span><strong>🎫 Ticket System</strong></span>
-      <span style={{ marginLeft: 'auto' }}>Rol: <strong>{user?.rol || 'invitado'}</strong></span>
-      <Link to="/tickets" style={styles.link}>Mis Tickets</Link>
-      {user?.rol === 'admin' && <Link to="/usuarios" style={styles.link}>Usuarios</Link>}
-      <button onClick={handleLogout} style={styles.button}>Cerrar Sesión</button>
+      <span style={{ fontWeight: '700', fontSize: '18px' }}>Ticket System</span>
+      <span style={{ marginLeft: 'auto' }}>Rol: <strong style={{ color: '#8bb9fe' }}>{user?.rol || 'invitado'}</strong></span>
+      <Link to="/tickets" style={styles.link} onMouseEnter={(e) => e.target.style.color = '#ffffff'} onMouseLeave={(e) => e.target.style.color = '#8bb9fe'}>Mis Tickets</Link>
+      {user?.rol === 'admin' && (
+        <Link to="/usuarios" style={styles.link} onMouseEnter={(e) => e.target.style.color = '#ffffff'} onMouseLeave={(e) => e.target.style.color = '#8bb9fe'}>Usuarios</Link>
+      )}
+      <button onClick={handleLogout} style={{ ...styles.button, backgroundColor: '#dc3545', boxShadow: '0 2px 6px rgba(220, 53, 69, 0.3)' }}>Cerrar Sesión</button>
     </div>
   );
 };
@@ -283,7 +308,7 @@ const Login = () => {
   return (
     <div style={{ ...styles.container, maxWidth: '400px', marginTop: '80px' }}>
       <div style={styles.card} className="fade-in">
-        <h2>Iniciar Sesión</h2>
+        <h2 style={{ color: '#0b2b44' }}>Iniciar Sesión</h2>
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -292,6 +317,8 @@ const Login = () => {
             onChange={(e) => setCorreo(e.target.value)}
             required
             style={styles.input}
+            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
           <input
             type="password"
@@ -300,11 +327,13 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             style={styles.input}
+            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
-          <button type="submit" style={styles.button} disabled={loading}>
+          <button type="submit" style={styles.button} disabled={loading} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
             {loading ? 'Cargando...' : 'Ingresar'}
           </button>
-          {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+          {error && <p style={{ color: '#dc3545', marginTop: '12px' }}>{error}</p>}
         </form>
       </div>
     </div>
@@ -360,15 +389,17 @@ const TicketsList = () => {
   return (
     <div style={styles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Mis Tickets</h2>
+        <h2 style={{ color: '#0b2b44' }}>Mis Tickets</h2>
         <Link to="/tickets/nuevo">
-          <button style={styles.button}>+ Crear Nuevo Ticket</button>
+          <button style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
+            + Crear Nuevo Ticket
+          </button>
         </Link>
       </div>
 
       <div style={styles.card} className="fade-in">
         {tickets.length === 0 ? (
-          <p>No tienes tickets. ¡Crea uno nuevo!</p>
+          <p style={{ color: '#4a6a85' }}>No tienes tickets. ¡Crea uno nuevo!</p>
         ) : (
           <table style={styles.table}>
             <thead>
@@ -386,7 +417,7 @@ const TicketsList = () => {
                 <tr key={t.id} className="fade-in" style={{ transition: 'background 0.2s' }}>
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ color: '#007bff', textDecoration: 'none' }}>
+                    <Link to={`/tickets/${t.id}`} style={{ color: '#0066cc', textDecoration: 'none', fontWeight: '500' }}>
                       {t.titulo}
                     </Link>
                   </td>
@@ -398,10 +429,10 @@ const TicketsList = () => {
                   <td style={styles.td}>{t.prioridad}</td>
                   <td style={styles.td}>{t.asignado_a?.nombre || 'Sin asignar'}</td>
                   <td style={styles.td}>
-                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '10px', color: '#007bff' }}>Ver</Link>
-                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '10px', color: '#28a745' }}>Editar</Link>
+                    <Link to={`/tickets/${t.id}`} style={{ marginRight: '12px', color: '#0066cc', fontWeight: '500' }}>Ver</Link>
+                    <Link to={`/tickets/editar/${t.id}`} style={{ marginRight: '12px', color: '#28a745', fontWeight: '500' }}>Editar</Link>
                     {user?.rol === 'admin' && (
-                      <button onClick={() => handleDelete(t.id)} style={styles.buttonDanger}>Eliminar</button>
+                      <button onClick={() => handleDelete(t.id)} style={styles.buttonDanger} onMouseEnter={(e) => { e.target.style.backgroundColor = '#c82333'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#dc3545'; }}>Eliminar</button>
                     )}
                   </td>
                 </tr>
@@ -489,7 +520,7 @@ const TicketForm = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
+        <h2 style={{ color: '#0b2b44' }}>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Título</label>
           <input
@@ -499,6 +530,8 @@ const TicketForm = () => {
             onChange={handleChange}
             required
             style={styles.input}
+            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
 
           <label style={styles.label}>Descripción</label>
@@ -508,6 +541,8 @@ const TicketForm = () => {
             onChange={handleChange}
             rows="4"
             style={{ ...styles.input, resize: 'vertical' }}
+            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
 
           <label style={styles.label}>Prioridad</label>
@@ -541,10 +576,10 @@ const TicketForm = () => {
             </>
           )}
 
-          <button type="submit" style={styles.button} disabled={loading}>
+          <button type="submit" style={styles.button} disabled={loading} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
-          <Link to="/tickets" style={{ marginLeft: '10px', color: '#6c757d' }}>Cancelar</Link>
+          <Link to="/tickets" style={{ marginLeft: '12px', color: '#6c757d' }}>Cancelar</Link>
         </form>
       </div>
     </div>
@@ -616,7 +651,7 @@ const TicketDetail = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2>{ticket.titulo}</h2>
+        <h2 style={{ color: '#0b2b44' }}>{ticket.titulo}</h2>
         <p><strong>Descripción:</strong> {ticket.descripcion || 'Sin descripción'}</p>
         <p><strong>Estado:</strong> <span style={{ ...styles.badge, backgroundColor: getEstadoColor(ticket.estado) }}>{ticket.estado}</span></p>
         <p><strong>Prioridad:</strong> {ticket.prioridad}</p>
@@ -625,41 +660,43 @@ const TicketDetail = () => {
         <p><strong>Fecha creación:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
         <p><strong>Última actualización:</strong> {new Date(ticket.updated_at).toLocaleString()}</p>
 
-        <Link to={`/tickets/editar/${ticket.id}`} style={{ marginRight: '10px' }}>
-          <button style={styles.button}>Editar</button>
+        <Link to={`/tickets/editar/${ticket.id}`} style={{ marginRight: '12px' }}>
+          <button style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>Editar</button>
         </Link>
         <Link to="/tickets">
-          <button style={{ ...styles.button, backgroundColor: '#6c757d' }}>Volver</button>
+          <button style={{ ...styles.button, backgroundColor: '#6c757d', boxShadow: '0 2px 6px rgba(108, 117, 125, 0.25)' }} onMouseEnter={(e) => { e.target.style.backgroundColor = '#5a6268'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#6c757d'; }}>Volver</button>
         </Link>
       </div>
 
       <div style={styles.card} className="fade-in">
-        <h3>Comentarios</h3>
+        <h3 style={{ color: '#0b2b44' }}>Comentarios</h3>
         {comentarios.length === 0 ? (
-          <p>No hay comentarios aún.</p>
+          <p style={{ color: '#4a6a85' }}>No hay comentarios aún.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {comentarios.map(c => (  
-              <li key={c.id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }} className="fade-in">
-                <strong>{c.usuarios?.nombre} {c.usuarios?.apellido}</strong>
-                <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '10px' }}>
+              <li key={c.id} style={{ borderBottom: '1px solid #e2e8f0', padding: '12px 0' }} className="fade-in">
+                <strong style={{ color: '#0b2b44' }}>{c.usuarios?.nombre} {c.usuarios?.apellido}</strong>
+                <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '12px' }}>
                   {new Date(c.created_at).toLocaleString()}
                 </span>
-                <p style={{ margin: '5px 0 0' }}>{c.contenido}</p>
+                <p style={{ margin: '6px 0 0', color: '#1e293b' }}>{c.contenido}</p>
               </li>
             ))}
           </ul>
         )}
 
-        <form onSubmit={agregarComentario} style={{ marginTop: '15px' }}>
+        <form onSubmit={agregarComentario} style={{ marginTop: '16px' }}>
           <textarea
             placeholder="Escribe un comentario..."
             value={nuevoComentario}
             onChange={(e) => setNuevoComentario(e.target.value)}
             rows="3"
             style={styles.input}
+            onFocus={(e) => { e.target.style.borderColor = '#0066cc'; e.target.style.boxShadow = '0 0 0 3px rgba(0,102,204,0.20)'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#cbd5e1'; e.target.style.boxShadow = 'none'; }}
           />
-          <button type="submit" style={styles.button}>Agregar comentario</button>
+          <button type="submit" style={styles.button} onMouseEnter={(e) => { e.target.style.backgroundColor = '#004d99'; e.target.style.boxShadow = '0 4px 12px rgba(0,80,160,0.35)'; }} onMouseLeave={(e) => { e.target.style.backgroundColor = '#0066cc'; e.target.style.boxShadow = '0 2px 6px rgba(0,80,160,0.25)'; }}>Agregar comentario</button>
         </form>
       </div>
     </div>
@@ -687,7 +724,7 @@ const UsuariosList = () => {
   return (
     <div style={styles.container}>
       <div style={styles.card} className="fade-in">
-        <h2>Administración de Usuarios</h2>
+        <h2 style={{ color: '#0b2b44' }}>Administración de Usuarios</h2>
         <table style={styles.table}>
           <thead>
             <tr>
