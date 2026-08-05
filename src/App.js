@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 // ============================
@@ -170,18 +170,6 @@ const styles = {
     transition: 'all 0.2s',
     boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)',
   },
-  buttonSuccess: {
-    backgroundColor: '#10b981',
-    color: '#fff',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '600',
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
-  },
   input: {
     width: '100%',
     padding: '12px 14px',
@@ -286,31 +274,6 @@ const styles = {
     borderRadius: '50%',
     marginRight: '6px',
   },
-  filterBar: {
-    display: 'flex',
-    gap: '16px',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    marginBottom: '16px',
-    padding: '16px',
-    background: '#f8fafc',
-    borderRadius: '8px',
-  },
-  filterInput: {
-    padding: '8px 12px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    fontSize: '14px',
-    flex: '1',
-    minWidth: '200px',
-  },
-  filterSelect: {
-    padding: '8px 12px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '6px',
-    fontSize: '14px',
-    backgroundColor: '#fff',
-  },
 };
 
 // ============================
@@ -389,28 +352,166 @@ const Login = () => {
           </button>
           {error && <p style={{ color: '#ef4444', marginTop: '16px' }}>{error}</p>}
         </form>
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
+          <Link to="/forgot-password" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- TicketsList con Dashboard, Filtros y Exportación ---
+// --- ForgotPassword (Nuevo) ---
+const ForgotPassword = () => {
+  const [correo, setCorreo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/recuperar-contrasena`, { correo });
+      setEnviado(true);
+      showToast('Si el correo existe, recibirás un enlace de recuperación', 'info');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Error al solicitar recuperación', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (enviado) {
+    return (
+      <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
+        <div style={styles.card} className="fade-in">
+          <h2 style={{ color: '#0b2b44' }}>Revisa tu correo</h2>
+          <p style={{ color: '#64748b' }}>Hemos enviado un enlace de recuperación a tu correo electrónico.</p>
+          <Link to="/login" style={{ color: '#2563eb' }}>Volver al inicio de sesión</Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
+      <div style={styles.card} className="fade-in">
+        <h2 style={{ color: '#0b2b44' }}>Recuperar Contraseña</h2>
+        <p style={{ color: '#64748b', marginBottom: '24px' }}>Ingresa tu correo para recibir un enlace de recuperación.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Enviando...' : 'Enviar enlace'}
+          </button>
+        </form>
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
+          <Link to="/login" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            Volver al inicio de sesión
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- ResetPassword (Nuevo) ---
+const ResetPassword = () => {
+  const [nuevaClave, setNuevaClave] = useState('');
+  const [confirmarClave, setConfirmarClave] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const queryParams = new URLSearchParams(location.search);
+  const token = queryParams.get('token');
+
+  useEffect(() => {
+    if (!token) {
+      showToast('Token de recuperación no válido', 'error');
+      navigate('/login');
+    }
+  }, [token, navigate, showToast]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (nuevaClave.length < 6) {
+      showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+      return;
+    }
+    if (nuevaClave !== confirmarClave) {
+      showToast('Las contraseñas no coinciden', 'error');
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/reset-password`, {
+        token,
+        nueva_clave: nuevaClave
+      });
+      showToast('Contraseña actualizada correctamente', 'success');
+      navigate('/login');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Error al restablecer la contraseña', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!token) return null;
+
+  return (
+    <div style={{ ...styles.container, maxWidth: '420px', marginTop: '80px' }}>
+      <div style={styles.card} className="fade-in">
+        <h2 style={{ color: '#0b2b44' }}>Restablecer Contraseña</h2>
+        <p style={{ color: '#64748b', marginBottom: '24px' }}>Ingresa tu nueva contraseña.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            placeholder="Nueva contraseña"
+            value={nuevaClave}
+            onChange={(e) => setNuevaClave(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <input
+            type="password"
+            placeholder="Confirmar contraseña"
+            value={confirmarClave}
+            onChange={(e) => setConfirmarClave(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Actualizando...' : 'Actualizar contraseña'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- TicketsList ---
 const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
-  const [filteredTickets, setFilteredTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterEstado, setFilterEstado] = useState('');
-  const [filterPrioridad, setFilterPrioridad] = useState('');
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  // Función para cargar tickets
   const fetchTickets = useCallback(async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
       setTickets(res.data);
-      setFilteredTickets(res.data);
     } catch (error) {
       showToast('No se pudieron cargar los tickets', 'error');
     } finally {
@@ -418,52 +519,15 @@ const TicketsList = () => {
     }
   }, [showToast]);
 
-  // Cargar tickets al montar
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
 
-  // ===== TIEMPO REAL: Polling cada 30 segundos =====
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchTickets();
-    }, 30000); // 30 segundos
-
-    return () => clearInterval(interval);
-  }, [fetchTickets]);
-
-  // ===== FILTROS =====
-  useEffect(() => {
-    let result = tickets;
-
-    // Búsqueda por título
-    if (searchTerm.trim()) {
-      result = result.filter(t =>
-        t.titulo.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtro por estado
-    if (filterEstado) {
-      result = result.filter(t => t.estado === filterEstado);
-    }
-
-    // Filtro por prioridad
-    if (filterPrioridad) {
-      result = result.filter(t => t.prioridad === filterPrioridad);
-    }
-
-    setFilteredTickets(result);
-  }, [tickets, searchTerm, filterEstado, filterPrioridad]);
-
-  // ===== ELIMINAR TICKET =====
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este ticket?')) {
       try {
         await axios.delete(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-        const updatedTickets = tickets.filter(t => t.id !== id);
-        setTickets(updatedTickets);
-        setFilteredTickets(updatedTickets);
+        setTickets(tickets.filter(t => t.id !== id));
         showToast('Ticket eliminado correctamente', 'success');
       } catch (error) {
         showToast(error.response?.data?.message || 'Error al eliminar', 'error');
@@ -471,44 +535,13 @@ const TicketsList = () => {
     }
   };
 
-  // ===== EXPORTAR A CSV (Solo admin) =====
-  const exportToCSV = () => {
-    if (tickets.length === 0) {
-      showToast('No hay tickets para exportar', 'info');
-      return;
-    }
-
-    // Definir encabezados
-    const headers = ['ID', 'Título', 'Descripción', 'Estado', 'Prioridad', 'Creado por', 'Asignado a', 'Fecha creación'];
-    const rows = tickets.map(t => [
-      t.id,
-      t.titulo,
-      t.descripcion || '',
-      t.estado,
-      t.prioridad,
-      `${t.creado_por?.nombre || ''} ${t.creado_por?.apellido || ''}`.trim() || 'Sin nombre',
-      t.asignado_a?.nombre || 'Sin asignar',
-      new Date(t.created_at).toLocaleString()
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `tickets_export_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-    showToast('Tickets exportados correctamente', 'success');
-  };
-
-  // Estadísticas
-  const total = filteredTickets.length;
-  const abiertos = filteredTickets.filter(t => t.estado === 'abierto').length;
-  const enProgreso = filteredTickets.filter(t => t.estado === 'en progreso').length;
-  const cerrados = filteredTickets.filter(t => t.estado === 'cerrado').length;
-  const alta = filteredTickets.filter(t => t.prioridad === 'alta').length;
-  const media = filteredTickets.filter(t => t.prioridad === 'media').length;
-  const baja = filteredTickets.filter(t => t.prioridad === 'baja').length;
+  const total = tickets.length;
+  const abiertos = tickets.filter(t => t.estado === 'abierto').length;
+  const enProgreso = tickets.filter(t => t.estado === 'en progreso').length;
+  const cerrados = tickets.filter(t => t.estado === 'cerrado').length;
+  const alta = tickets.filter(t => t.prioridad === 'alta').length;
+  const media = tickets.filter(t => t.prioridad === 'media').length;
+  const baja = tickets.filter(t => t.prioridad === 'baja').length;
 
   const getEstadoColor = (estado) => {
     const colores = { 'abierto': '#10b981', 'en progreso': '#f59e0b', 'cerrado': '#94a3b8' };
@@ -524,7 +557,6 @@ const TicketsList = () => {
 
   return (
     <div style={styles.container}>
-      {/* Dashboard de Estadísticas */}
       <div style={styles.statGrid}>
         <div style={styles.statCard} className="fade-in">
           <div style={styles.statNumber}>{total}</div>
@@ -556,70 +588,16 @@ const TicketsList = () => {
         </div>
       </div>
 
-      {/* Barra de acciones: Crear ticket + Exportar CSV */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ color: '#0b2b44', fontSize: '22px', fontWeight: '700' }}>Mis Tickets</h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {user?.rol === 'admin' && (
-            <button onClick={exportToCSV} style={styles.buttonSuccess}>
-              Exportar CSV
-            </button>
-          )}
-          <Link to="/tickets/nuevo">
-            <button style={styles.button}>+ Crear Nuevo Ticket</button>
-          </Link>
-        </div>
+        <Link to="/tickets/nuevo">
+          <button style={styles.button}>+ Crear Nuevo Ticket</button>
+        </Link>
       </div>
 
-      {/* Filtros avanzados */}
-      <div style={styles.filterBar}>
-        <input
-          type="text"
-          placeholder="Buscar por título..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={styles.filterInput}
-        />
-        <select
-          value={filterEstado}
-          onChange={(e) => setFilterEstado(e.target.value)}
-          style={styles.filterSelect}
-        >
-          <option value="">Todos los estados</option>
-          <option value="abierto">Abierto</option>
-          <option value="en progreso">En Progreso</option>
-          <option value="cerrado">Cerrado</option>
-        </select>
-        <select
-          value={filterPrioridad}
-          onChange={(e) => setFilterPrioridad(e.target.value)}
-          style={styles.filterSelect}
-        >
-          <option value="">Todas las prioridades</option>
-          <option value="alta">Alta</option>
-          <option value="media">Media</option>
-          <option value="baja">Baja</option>
-        </select>
-        {(searchTerm || filterEstado || filterPrioridad) && (
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setFilterEstado('');
-              setFilterPrioridad('');
-            }}
-            style={{ ...styles.buttonDanger, padding: '8px 16px' }}
-          >
-            Limpiar filtros
-          </button>
-        )}
-      </div>
-
-      {/* Tabla de tickets */}
       <div style={styles.card} className="fade-in">
-        {filteredTickets.length === 0 ? (
-          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>
-            {tickets.length === 0 ? 'No tienes tickets. ¡Crea uno nuevo!' : 'No hay tickets que coincidan con los filtros.'}
-          </p>
+        {tickets.length === 0 ? (
+          <p style={{ color: '#64748b', textAlign: 'center', padding: '20px 0' }}>No tienes tickets. ¡Crea uno nuevo!</p>
         ) : (
           <table style={styles.table}>
             <thead>
@@ -633,7 +611,7 @@ const TicketsList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.map(t => (
+              {tickets.map(t => (
                 <tr key={t.id} className="fade-in" style={{ transition: 'background 0.15s' }}>
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
@@ -1023,6 +1001,8 @@ function App() {
           <Navbar />
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/tickets" element={<ProtectedRoute><TicketsList /></ProtectedRoute>} />
             <Route path="/tickets/nuevo" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
             <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
