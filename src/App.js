@@ -424,7 +424,7 @@ const ForgotPassword = () => {
   );
 };
 
-// --- ResetPassword (corregido: eliminada variable navigate no usada) ---
+// --- ResetPassword (CORREGIDO: navigate se usa) ---
 const ResetPassword = () => {
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
