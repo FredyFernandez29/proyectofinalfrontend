@@ -424,14 +424,13 @@ const ForgotPassword = () => {
   );
 };
 
-// --- ResetPassword (CORREGIDO: navigate se usa correctamente) ---
+// --- ResetPassword (CORREGIDO: SIN NAVIGATE) ---
 const ResetPassword = () => {
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const location = useLocation();
-  const navigate = useNavigate();
 
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
@@ -439,9 +438,8 @@ const ResetPassword = () => {
   useEffect(() => {
     if (!token) {
       showToast('Token de recuperación no válido', 'error');
-      navigate('/login');
     }
-  }, [token, navigate, showToast]);
+  }, [token, showToast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -460,7 +458,6 @@ const ResetPassword = () => {
         nueva_clave: nuevaClave
       });
       showToast('Contraseña actualizada correctamente', 'success');
-      navigate('/login');
     } catch (error) {
       showToast(error.response?.data?.message || 'Error al restablecer la contraseña', 'error');
     } finally {
