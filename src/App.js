@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
@@ -52,7 +52,79 @@ const AuthProvider = ({ children }) => {
 const useAuth = () => useContext(AuthContext);
 
 // ============================
-// 2. ESTILOS GLOBALES
+// 2. SISTEMA DE NOTIFICACIONES (Toast)
+// ============================
+const ToastContext = createContext();
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+
+  const showToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  };
+
+  return (
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      <div style={toastStyles.container}>
+        {toasts.map(toast => (
+          <div key={toast.id} style={{ ...toastStyles.toast, ...toastStyles[toast.type] }}>
+            {toast.message}
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+};
+
+const useToast = () => useContext(ToastContext);
+
+const toastStyles = {
+  container: {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    zIndex: 9999,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  toast: {
+    padding: '12px 20px',
+    borderRadius: '8px',
+    color: '#fff',
+    fontWeight: '500',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    animation: 'slideIn 0.3s ease-out',
+    minWidth: '250px',
+    maxWidth: '400px',
+  },
+  success: { backgroundColor: '#28a745' },
+  error: { backgroundColor: '#dc3545' },
+  info: { backgroundColor: '#17a2b8' },
+};
+
+// Inyectar animación CSS global
+const globalStyles = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+`;
+
+// ============================
+// 3. ESTILOS GLOBALES
 // ============================
 const styles = {
   container: {
@@ -67,6 +139,11 @@ const styles = {
     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
     padding: '20px',
     marginBottom: '20px',
+    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  },
+  cardHover: {
+    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    transform: 'translateY(-2px)',
   },
   button: {
     backgroundColor: '#007bff',
@@ -76,7 +153,11 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '14px',
-    transition: 'background 0.2s',
+    transition: 'background 0.2s, transform 0.15s',
+  },
+  buttonHover: {
+    backgroundColor: '#0056b3',
+    transform: 'scale(1.02)',
   },
   buttonDanger: {
     backgroundColor: '#dc3545',
@@ -86,6 +167,7 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '14px',
+    transition: 'background 0.2s',
   },
   input: {
     width: '100%',
@@ -95,6 +177,11 @@ const styles = {
     fontSize: '14px',
     marginBottom: '10px',
     boxSizing: 'border-box',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  },
+  inputFocus: {
+    borderColor: '#80bdff',
+    boxShadow: '0 0 0 0.2rem rgba(0,123,255,0.25)',
   },
   label: {
     fontWeight: '600',
@@ -136,10 +223,16 @@ const styles = {
     fontWeight: 'bold',
     color: '#fff',
   },
+  loading: {
+    textAlign: 'center',
+    padding: '40px',
+    fontSize: '18px',
+    color: '#6c757d',
+  },
 };
 
 // ============================
-// 3. COMPONENTES
+// 4. COMPONENTES
 // ============================
 
 // --- Navbar ---
@@ -168,22 +261,28 @@ const Login = () => {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const result = await login(correo, password);
+    setLoading(false);
     if (result.success) {
+      showToast('Bienvenido, has iniciado sesión correctamente', 'success');
       navigate('/tickets');
     } else {
       setError(result.message);
+      showToast(result.message, 'error');
     }
   };
 
   return (
     <div style={{ ...styles.container, maxWidth: '400px', marginTop: '80px' }}>
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         <h2>Iniciar Sesión</h2>
         <form onSubmit={handleSubmit}>
           <input
@@ -202,7 +301,9 @@ const Login = () => {
             required
             style={styles.input}
           />
-          <button type="submit" style={styles.button}>Ingresar</button>
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Cargando...' : 'Ingresar'}
+          </button>
           {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
         </form>
       </div>
@@ -215,29 +316,32 @@ const TicketsList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { showToast } = useToast();
+
+  const fetchTickets = useCallback(async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
+      setTickets(res.data);
+    } catch (error) {
+      console.error('Error al cargar tickets:', error);
+      showToast('No se pudieron cargar los tickets', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
 
   useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets`);
-        setTickets(res.data);
-      } catch (error) {
-        console.error('Error al cargar tickets:', error);
-        alert('No se pudieron cargar los tickets');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este ticket?')) {
       try {
         await axios.delete(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
         setTickets(tickets.filter(t => t.id !== id));
+        showToast('Ticket eliminado correctamente', 'success');
       } catch (error) {
-        alert(error.response?.data?.message || 'Error al eliminar');
+        showToast(error.response?.data?.message || 'Error al eliminar', 'error');
       }
     }
   };
@@ -251,7 +355,7 @@ const TicketsList = () => {
     return colores[estado] || '#6c757d';
   };
 
-  if (loading) return <div style={styles.container}>Cargando tickets...</div>;
+  if (loading) return <div style={styles.loading}>Cargando tickets...</div>;
 
   return (
     <div style={styles.container}>
@@ -262,7 +366,7 @@ const TicketsList = () => {
         </Link>
       </div>
 
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         {tickets.length === 0 ? (
           <p>No tienes tickets. ¡Crea uno nuevo!</p>
         ) : (
@@ -279,7 +383,7 @@ const TicketsList = () => {
             </thead>
             <tbody>
               {tickets.map(t => (
-                <tr key={t.id}>
+                <tr key={t.id} className="fade-in" style={{ transition: 'background 0.2s' }}>
                   <td style={styles.td}>{t.id}</td>
                   <td style={styles.td}>
                     <Link to={`/tickets/${t.id}`} style={{ color: '#007bff', textDecoration: 'none' }}>
@@ -315,6 +419,7 @@ const TicketForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const isEdit = Boolean(id);
 
   const [formData, setFormData] = useState({
@@ -325,41 +430,36 @@ const TicketForm = () => {
   });
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cargandoDatos, setCargandoDatos] = useState(true);
 
   useEffect(() => {
-    const fetchUsuarios = async () => {
-      if (user?.rol === 'admin' || user?.rol === 'tecnico') {
-        try {
-          const res = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
-          setUsuarios(res.data);
-        } catch (err) {
-          console.error('Error al cargar usuarios:', err);
+    const fetchData = async () => {
+      try {
+        if (user?.rol === 'admin' || user?.rol === 'tecnico') {
+          const resUsuarios = await axios.get(`${process.env.REACT_APP_API_URL}/usuarios`);
+          setUsuarios(resUsuarios.data);
         }
-      }
-    };
 
-    const fetchTicket = async () => {
-      if (isEdit) {
-        try {
-          const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-          const t = res.data;
+        if (isEdit) {
+          const resTicket = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
+          const t = resTicket.data;
           setFormData({
             titulo: t.titulo,
             descripcion: t.descripcion || '',
             prioridad: t.prioridad,
             asignado_a: t.asignado_a?.id || ''
           });
-        } catch (err) {
-          console.error('Error al cargar ticket:', err);
-          alert('No se pudo cargar el ticket');
-          navigate('/tickets');
         }
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        showToast('Error al cargar los datos', 'error');
+        if (isEdit) navigate('/tickets');
+      } finally {
+        setCargandoDatos(false);
       }
     };
-
-    fetchUsuarios();
-    fetchTicket();
-  }, [id, user, isEdit, navigate]);
+    fetchData();
+  }, [id, user, isEdit, navigate, showToast]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -371,20 +471,24 @@ const TicketForm = () => {
     try {
       if (isEdit) {
         await axios.put(`${process.env.REACT_APP_API_URL}/tickets/${id}`, formData);
+        showToast('Ticket actualizado correctamente', 'success');
       } else {
         await axios.post(`${process.env.REACT_APP_API_URL}/tickets`, formData);
+        showToast('Ticket creado correctamente', 'success');
       }
       navigate('/tickets');
     } catch (error) {
-      alert(error.response?.data?.message || 'Error al guardar el ticket');
+      showToast(error.response?.data?.message || 'Error al guardar el ticket', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (cargandoDatos) return <div style={styles.loading}>Cargando datos...</div>;
+
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         <h2>{isEdit ? 'Editar Ticket' : 'Nuevo Ticket'}</h2>
         <form onSubmit={handleSubmit}>
           <label style={styles.label}>Título</label>
@@ -451,37 +555,39 @@ const TicketForm = () => {
 const TicketDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [ticket, setTicket] = useState(null);
   const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const cargarTicket = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
+      setTicket(res.data);
+      setComentarios(res.data.comentarios || []);
+    } catch (error) {
+      console.error('Error al cargar ticket:', error);
+      const msg = error.response?.data?.message || 'Error al cargar el ticket';
+      showToast(msg, 'error');
+      navigate('/tickets');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, navigate, showToast]);
+
   useEffect(() => {
-    const cargarTicket = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/tickets/${id}`);
-        setTicket(res.data);
-        setComentarios(res.data.comentarios || []);
-      } catch (error) {
-        console.error('Error al cargar ticket:', error);
-        if (error.response) {
-          alert(error.response.data?.message || 'Error al cargar el ticket');
-        } else {
-          alert('Error de conexión al servidor');
-        }
-        navigate('/tickets');
-      } finally {
-        setLoading(false);
-      }
-    };
     cargarTicket();
-  }, [id, navigate]);
+  }, [cargarTicket]);
 
   const agregarComentario = async (e) => {
     e.preventDefault();
-    if (!nuevoComentario.trim()) return;
+    if (!nuevoComentario.trim()) {
+      showToast('El comentario no puede estar vacío', 'error');
+      return;
+    }
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/tickets/${id}/comentarios`, {
         contenido: nuevoComentario
@@ -489,12 +595,13 @@ const TicketDetail = () => {
       const nuevo = res.data[0];
       setComentarios([...comentarios, { ...nuevo, usuario: user }]);
       setNuevoComentario('');
+      showToast('Comentario agregado', 'success');
     } catch (error) {
-      alert('Error al agregar comentario');
+      showToast('Error al agregar comentario', 'error');
     }
   };
 
-  if (loading) return <div style={styles.container}>Cargando...</div>;
+  if (loading) return <div style={styles.loading}>Cargando ticket...</div>;
   if (!ticket) return <div style={styles.container}>Ticket no encontrado</div>;
 
   const getEstadoColor = (estado) => {
@@ -508,7 +615,7 @@ const TicketDetail = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         <h2>{ticket.titulo}</h2>
         <p><strong>Descripción:</strong> {ticket.descripcion || 'Sin descripción'}</p>
         <p><strong>Estado:</strong> <span style={{ ...styles.badge, backgroundColor: getEstadoColor(ticket.estado) }}>{ticket.estado}</span></p>
@@ -526,14 +633,14 @@ const TicketDetail = () => {
         </Link>
       </div>
 
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         <h3>Comentarios</h3>
         {comentarios.length === 0 ? (
           <p>No hay comentarios aún.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {comentarios.map(c => (
-              <li key={c.id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }}>
+              <li key={c.id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }} className="fade-in">
                 <strong>{c.usuario?.nombre} {c.usuario?.apellido}</strong>
                 <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '10px' }}>
                   {new Date(c.created_at).toLocaleString()}
@@ -559,28 +666,27 @@ const TicketDetail = () => {
   );
 };
 
-// --- UsuariosList (solo admin) ---
+// --- UsuariosList ---
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (user?.rol === 'admin') {
       axios.get(`${process.env.REACT_APP_API_URL}/usuarios`)
-        .then(res => {
-          setUsuarios(res.data);
-        })
-        .catch(console.error)
+        .then(res => setUsuarios(res.data))
+        .catch(() => showToast('Error al cargar usuarios', 'error'))
         .finally(() => setLoading(false));
     }
-  }, [user]);
+  }, [user, showToast]);
 
-  if (loading) return <div style={styles.container}>Cargando usuarios...</div>;
+  if (loading) return <div style={styles.loading}>Cargando usuarios...</div>;
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
+      <div style={styles.card} className="fade-in">
         <h2>Administración de Usuarios</h2>
         <table style={styles.table}>
           <thead>
@@ -594,7 +700,7 @@ const UsuariosList = () => {
           </thead>
           <tbody>
             {usuarios.map(u => (
-              <tr key={u.id}>
+              <tr key={u.id} className="fade-in">
                 <td style={styles.td}>{u.id}</td>
                 <td style={styles.td}>{u.nombre}</td>
                 <td style={styles.td}>{u.apellido}</td>
@@ -610,37 +716,40 @@ const UsuariosList = () => {
 };
 
 // ============================
-// 4. APP PRINCIPAL
+// 5. APP PRINCIPAL
 // ============================
 function App() {
   const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
-    if (loading) return <div>Cargando...</div>;
+    if (loading) return <div style={styles.loading}>Cargando...</div>;
     if (!user) return <Navigate to="/login" />;
     return children;
   };
 
   const AdminRoute = ({ children }) => {
     const { user, loading } = useAuth();
-    if (loading) return <div>Cargando...</div>;
+    if (loading) return <div style={styles.loading}>Cargando...</div>;
     if (!user || user.rol !== 'admin') return <Navigate to="/tickets" />;
     return children;
   };
 
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/tickets" element={<ProtectedRoute><TicketsList /></ProtectedRoute>} />
-          <Route path="/tickets/nuevo" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
-          <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
-          <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
-          <Route path="/usuarios" element={<AdminRoute><UsuariosList /></AdminRoute>} />
-          <Route path="/" element={<Navigate to="/tickets" />} />
-        </Routes>
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <style>{globalStyles}</style>
+          <Navbar />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/tickets" element={<ProtectedRoute><TicketsList /></ProtectedRoute>} />
+            <Route path="/tickets/nuevo" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
+            <Route path="/tickets/editar/:id" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
+            <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
+            <Route path="/usuarios" element={<AdminRoute><UsuariosList /></AdminRoute>} />
+            <Route path="/" element={<Navigate to="/tickets" />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }
