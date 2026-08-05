@@ -593,7 +593,7 @@ const TicketDetail = () => {
         contenido: nuevoComentario
       });
       const nuevo = res.data[0];
-      setComentarios([...comentarios, { ...nuevo, usuario: user }]);
+      setComentarios([...comentarios, { ...nuevo, usuarios: user }]);
       setNuevoComentario('');
       showToast('Comentario agregado', 'success');
     } catch (error) {
@@ -639,9 +639,9 @@ const TicketDetail = () => {
           <p>No hay comentarios aún.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {comentarios.map(c => (
+            {comentarios.map(c => (  
               <li key={c.id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }} className="fade-in">
-                <strong>{c.usuario?.nombre} {c.usuario?.apellido}</strong>
+                <strong>{c.usuarios?.nombre} {c.usuarios?.apellido}</strong>
                 <span style={{ color: '#6c757d', fontSize: '0.8rem', marginLeft: '10px' }}>
                   {new Date(c.created_at).toLocaleString()}
                 </span>
