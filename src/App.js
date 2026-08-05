@@ -362,7 +362,7 @@ const Login = () => {
   );
 };
 
-// --- ForgotPassword (Nuevo) ---
+// --- ForgotPassword ---
 const ForgotPassword = () => {
   const [correo, setCorreo] = useState('');
   const [loading, setLoading] = useState(false);
@@ -424,14 +424,14 @@ const ForgotPassword = () => {
   );
 };
 
-// --- ResetPassword (Nuevo) ---
+// --- ResetPassword (corregido: eliminada variable navigate no usada) ---
 const ResetPassword = () => {
   const [nuevaClave, setNuevaClave] = useState('');
   const [confirmarClave, setConfirmarClave] = useState('');
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
